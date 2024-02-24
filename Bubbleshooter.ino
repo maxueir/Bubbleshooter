@@ -45,7 +45,7 @@ void loop(){
       Serial.print(y);
       Serial.println(")");
     }
-    delay(300);
+    delay(350);
   }
 
   delay(5000);  // Attente pour observer les pixels allumés
