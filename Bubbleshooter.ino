@@ -1,5 +1,5 @@
 
- 
+
 #include <DFRobot_RGBMatrix.h> // Hardware-specific library
 
 #define OE   	9
@@ -13,42 +13,52 @@
 #define WIDTH 64
 #define _HIGH	64
 
+//taille d'un bubble shooter : 17 de large et x de hauteur
+volatile int pos=2;//position de la fleche d'envoi en x
+volatile int incl=0;//inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile bool deplacement=false;//booleen pour indiquer si la boule est en deplacement
+
 DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 
 void setup() {
   Serial.begin(9600);
   matrix.begin();
-  matrix.fillRect(0,matrix.height()-3, 3, 3, matrix.Color888(255, 0, 0));
-  matrix.drawPixel(1,matrix.height()-4, matrix.Color888(255, 0, 255));
-  matrix.drawLine(matrix.width()/2 -1,matrix.height()-1,10,20, matrix.Color888(255, 0, 255));
+}
+
+void est
+
+void deplacer(int dirdem,int incldem){//deplacer la fleche d'envoi en inclinaison -1=gauche 0=rester 1=droite et en position -1=gauche 0=rester 1=droite
+  if(estPossible(dirdem,incldem)){
+    int hauteur=0;
+    for(int i=0;i<2;i++){
+
+    if(incl==1){
+      matrix.drawRect(pos,matrix.height()-7-hauteur,2,2, matrix.Color888(255*i, 0, 255*i));//boule a envoyer
+      matrix.drawRect(pos,matrix.height()-4-hauteur,2,4, matrix.Color888(255*i, 0, 0));//base de la fleche
+      }
+    else if(incl==0){
+      matrix.drawLine(pos,matrix.height()-1-hauteur, pos-3, matrix.height()-4-hauteur, matrix.Color888(255*i, 0, 0));//base de la fleche
+      matrix.drawLine(pos+1,matrix.height()-1-hauteur, pos-2, matrix.height()-4-hauteur, matrix.Color888(255*i, 0, 0));
+
+      matrix.drawLine(pos-5,matrix.height()-6-hauteur, pos-4, matrix.height()-6-hauteur, matrix.Color888(255*i, 0, 255*i));//boule a envoyer en lignes horizontales
+      matrix.drawLine(pos-6,matrix.height()-7-hauteur, pos-5, matrix.height()-7-hauteur, matrix.Color888(255*i, 0, 255*i));
+    }
+    else if(incl==2){
+      matrix.drawLine(pos,matrix.height()-1-hauteur, pos+3, matrix.height()-4-hauteur, matrix.Color888(255*i, 0, 0));//base de la fleche
+      matrix.drawLine(pos+1,matrix.height()-1-hauteur, pos+4, matrix.height()-4-hauteur, matrix.Color888(255*i, 0, 0));
+
+      matrix.drawLine(pos+6,matrix.height()-6-hauteur, pos+5, matrix.height()-6-hauteur, matrix.Color888(255*i, 0, 255*i));//boule a envoyer en lignes horizontales
+      matrix.drawLine(pos+7,matrix.height()-7-hauteur, pos+6, matrix.height()-7-hauteur, matrix.Color888(255*i, 0, 255*i));
+    }
+
+    incl=incl+incldem;
+    pos=pos+dirdem;
+    }
+  }
 }
 
 void loop(){
-  // Coordonnées de début et de fin de la ligne
-  int x0 = 24;
-  int y0 = 5;
-  int x1 = 56;
-  int y1 = 12;
-
-  // Dessine la ligne
-  matrix.drawLine(x0, y0, x1, y1, matrix.Color888(255, 0, 0));  // Ligne rouge
-
-  // Affiche les coordonnées des pixels allumés
-  Serial.println("Pixels allumés sur la ligne :");
-  for (int x = x0; x <= x1; x++) {
-    int y = y0 + (y1 - y0) * (x - x0) / (x1 - x0);  // Equation de la droite
-    if (y >= 0 && y < matrix.height()) {
-      matrix.drawPixel(x, y, matrix.Color888(0, 255, 0));  // Pixel vert pour visualisation
-      Serial.print("(");
-      Serial.print(x);
-      Serial.print(", ");
-      Serial.print(y);
-      Serial.println(")");
-    }
-    delay(350);
-  }
-
-  delay(5000);  // Attente pour observer les pixels allumés
-  matrix.fillScreen(matrix.Color888(0, 0, 0));  // Efface l'écran
-  delay(1000);  // Délai avant la prochaine itération
+ deplacer(true,);
+ delay(1000);
+ matrix.fillScreen(matrix.Color888(0,0,0));
 }
