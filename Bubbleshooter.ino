@@ -16,7 +16,7 @@
 
 //taille d'un bubble shooter : 17 de large et x de hauteur
 int hauteur=5;//hauteur du jeu
-int marge=5;//marge du jeu
+int marge=0;//marge du jeu
 int en_tete=0;//en_tete du jeu
 
 volatile int pos=20;//position de la fleche d'envoi en x
@@ -33,7 +33,8 @@ DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 void setup() {
   Serial.begin(9600);
   matrix.begin();
-  Timer3.initialize(75000);//defini l'intervalle
+  //Timer3.initialize(75000);//defini l'intervalle
+  Timer3.initialize(500000);
   Timer3.attachInterrupt(deplacer_cube);
 }
 
@@ -70,23 +71,18 @@ void deplacer_cube(){
         }
       }
       else if(incl_cube==1){
-        if(pos_cube_x==63-2-marge){
-          matrix.drawLine(pos_cube_x,pos_cube_y, pos_cube_x+1, pos_cube_y, matrix.Color888(0, 0, 0));
-          matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(0, 0, 0));
+        if(pos_cube_x==63-2-marge){//gere la collision a droite
+          matrix.drawLine(pos_cube_x,pos_cube_y, pos_cube_x+1, pos_cube_y, matrix.Color888(255*i, 0, 255*i));
+          matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255*i, 0, 255*i));
 
-          matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255, 0, 255));
-          matrix.drawLine(pos_cube_x,pos_cube_y-2, pos_cube_x+1, pos_cube_y-2, matrix.Color888(255, 0, 255));
+          //matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255, 0, 255));
+          //matrix.drawLine(pos_cube_x,pos_cube_y-2, pos_cube_x+1, pos_cube_y-2, matrix.Color888(255, 0, 255));
 
           pos_cube_x=pos_cube_x+1;
           pos_cube_y=pos_cube_y-1;
           incl_cube=-1;
         }
         else{
-
-        
-
-          for(int i=0;i<2;i++){//1 fois pour eteindre et l'autre pour allumer 
-
               matrix.drawLine(pos_cube_x,pos_cube_y, pos_cube_x+1, pos_cube_y, matrix.Color888(255*i, 0, 255*i));//boule a envoyer en lignes horizontales
               
               matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255*i, 0, 255*i));
@@ -95,12 +91,32 @@ void deplacer_cube(){
                 pos_cube_x=pos_cube_x+1;
                 pos_cube_y=pos_cube_y-1;
               }
-            
-          }
+        }
+      }
+      else if(incl_cube==-1){
+        if(pos_cube_x==1+marge){//gere la collision a gauche
+          matrix.drawLine(pos_cube_x,pos_cube_y, pos_cube_x+1, pos_cube_y, matrix.Color888(255*i, 0, 255*i));
+          matrix.drawLine(pos_cube_x-1,pos_cube_y-1, pos_cube_x, pos_cube_y-1, matrix.Color888(255*i, 0, 255*i));
+
+          //matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255, 0, 255));
+          //matrix.drawLine(pos_cube_x,pos_cube_y-2, pos_cube_x+1, pos_cube_y-2, matrix.Color888(255, 0, 255));
+
+          pos_cube_x=pos_cube_x-1;
+          pos_cube_y=pos_cube_y-1;
+          incl_cube=1;
+        }
+        else{
+              matrix.drawLine(pos_cube_x,pos_cube_y, pos_cube_x+1, pos_cube_y, matrix.Color888(255*i, 0, 255*i));//boule a envoyer en lignes horizontales
+              
+              matrix.drawLine(pos_cube_x-1,pos_cube_y-1, pos_cube_x, pos_cube_y-1, matrix.Color888(255*i, 0, 255*i));
+
+              if(i==0){
+                pos_cube_x=pos_cube_x-1;
+                pos_cube_y=pos_cube_y-1;
+              }
         }
       }
 
-      
     }
   }
   else{
