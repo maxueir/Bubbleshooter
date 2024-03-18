@@ -1,6 +1,7 @@
 
 
 #include <DFRobot_RGBMatrix.h> // Hardware-specific library
+#include <TimerThree.h>
 
 #define OE   	9
 #define LAT 	10
@@ -14,10 +15,12 @@
 #define _HIGH	64
 
 //taille d'un bubble shooter : 17 de large et x de hauteur
-int hauteur=0;//hauteur du jeu
+int hauteur=5;//hauteur du jeu
+int marge=5;//marge du jeu
+int en_tete=0;//en_tete du jeu
 
 volatile int pos=20;//position de la fleche d'envoi en x
-volatile int incl=-1;//inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile int incl=0;//inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
 volatile int pos_cube_x=0;//position de la boule en bas a gauche en x
 volatile int pos_cube_y=0;//position de la boule en bas a gauche en y
@@ -30,10 +33,12 @@ DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 void setup() {
   Serial.begin(9600);
   matrix.begin();
+  Timer3.initialize(75000);//defini l'intervalle
+  Timer3.attachInterrupt(deplacer_cube);
 }
 
 bool estPossible(int a, int b){//a=dir b=incl => verifier si le deplacement est possible(ne pas sortir de la zone de jeu)
-  int marge=2;
+  
   if(incl+b==0){
     return ((pos+a)<(63-marge) & (pos+a)>=marge);
   }
@@ -48,18 +53,58 @@ bool estPossible(int a, int b){//a=dir b=incl => verifier si le deplacement est 
   }
 }
 
+bool case_libre(){
+  
+  return pos_cube_y>1+en_tete;
+  
+}
+
 void deplacer_cube(){
-  if(deplacement){
+  if(deplacement & case_libre()){
     for(int i=0;i<2;i++){
+
       if(incl_cube==0){
         matrix.drawRect(pos_cube_x,pos_cube_y-1,2,2, matrix.Color888(255*i, 0, 255*i));//boule a envoyer
         if(i==0){
           pos_cube_y=pos_cube_y-1;
         }
       }
+      else if(incl_cube==1){
+        if(pos_cube_x==63-2-marge){
+          matrix.drawLine(pos_cube_x,pos_cube_y, pos_cube_x+1, pos_cube_y, matrix.Color888(0, 0, 0));
+          matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(0, 0, 0));
+
+          matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255, 0, 255));
+          matrix.drawLine(pos_cube_x,pos_cube_y-2, pos_cube_x+1, pos_cube_y-2, matrix.Color888(255, 0, 255));
+
+          pos_cube_x=pos_cube_x+1;
+          pos_cube_y=pos_cube_y-1;
+          incl_cube=-1;
+        }
+        else{
+
+        
+
+          for(int i=0;i<2;i++){//1 fois pour eteindre et l'autre pour allumer 
+
+              matrix.drawLine(pos_cube_x,pos_cube_y, pos_cube_x+1, pos_cube_y, matrix.Color888(255*i, 0, 255*i));//boule a envoyer en lignes horizontales
+              
+              matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255*i, 0, 255*i));
+
+              if(i==0){
+                pos_cube_x=pos_cube_x+1;
+                pos_cube_y=pos_cube_y-1;
+              }
+            
+          }
+        }
+      }
 
       
     }
+  }
+  else{
+    deplacement=false;
   }
 }
 
@@ -95,10 +140,12 @@ void deplacer(int dirdem,int incldem){//deplacer la fleche d'envoi en inclinaiso
 }
 
 void loop(){
+
   if (Serial.available() > 0) {
     char command = Serial.read();
     Serial.println(command);
     if(command=='a'){
+      Serial.print("a");
       deplacer(0,-1);
     }
     else if(command=='e'){
