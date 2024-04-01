@@ -20,26 +20,26 @@
 
 DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 
-//taille d'un bubble shooter : 17 de large et x de hauteur
-int hauteur = 5;  //hauteur du jeu
-int marge_g = 5;    //marge du jeu
-int marge_d = 10;    //marge du jeu
+//taille d'un bubble shooter : 17 de large et 16 de hauteur (17=> peerdu)
+int hauteur = 0;  //hauteur du jeu
+int marge_g = 1;    //marge du jeu
+int marge_d = 1;    //marge du jeu
 int en_tete = 0;  //en_tete du jeu
 
 
-volatile int pos = 20;  //position de la fleche d'envoi en x
+volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
 volatile int score = 0; // score
 
 volatile int pos_cube_x = 0;    //position de la boule en bas a gauche en x
 volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
-volatile int incl_cube = -1;    //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile int incl_cube = 0;    //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
 int largeur_jeu;
 int hauteur_jeu;
-short jeu[27][27];//que des 0 partout par defaut, donc aucune bille
+short jeu[15][15];//que des 0 partout par defaut, donc aucune bille
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 0, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
@@ -51,18 +51,18 @@ volatile bool deplacement = false;  //booleen pour indiquer si la boule est en d
 void setup() {
   matrix.begin();
   Serial.begin(9600);
-  delay(1500); // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois 
-  Serial.println("ici");
+  //delay(1500); // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois 
+  //Serial.println("ici");
   matrix.fillScreen(0);
   //Timer3.initialize(75000);//defini l'intervalle
-  //Timer3.initialize(10000);//deux 0 en plus
-  //Timer3.attachInterrupt(deplacer_cube);
+  Timer3.initialize(1000000);//deux 0 en plus
+  Timer3.attachInterrupt(deplacer_cube);
   //init_anim(); // animation de lancement du jeu
   //init_interface(); // initialise l'interface de jeu
-  initialisation_jeu();
+  //initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
-  afficher_jeu();
+  //afficher_jeu();
 }
 
 void init_anim() {
@@ -192,11 +192,11 @@ Serial.println(hauteur_jeu);
 bool estPossible(int a, int b) {  //a=dir b=incl => verifier si le deplacement est possible(ne pas sortir de la zone de jeu)
 
   if (incl + b == 0) {
-    return ((pos + a) < (63 - marge_d) & (pos + a) >= marge_g);
+    return ((pos + a) < (62 - marge_d) & (pos + a) >= marge_g);
   } else if (incl + b == 1) {
-    return ((pos + a + 6) < (63 - marge_d) & (pos + a) >= marge_g);
+    return ((pos + a + 6) < (61 - marge_d) & (pos + a) >= marge_g);
   } else if (incl + b == -1) {
-    return ((pos + a) < (63 - marge_d) & (pos + a - 6) >= marge_g);
+    return ((pos + a) < (62 - marge_d) & (pos + a - 7) >= marge_g);
   } else {
     return false;
   }
@@ -204,7 +204,7 @@ bool estPossible(int a, int b) {  //a=dir b=incl => verifier si le deplacement e
 
 bool case_libre() {
 
-  return pos_cube_y > 1 + en_tete;
+  return pos_cube_y > 2 + en_tete;
 }
 
 void deplacer_cube() {
@@ -212,28 +212,26 @@ void deplacer_cube() {
     for (int i = 0; i < 2; i++) {
 
       if (incl_cube == 0) {
-        matrix.drawRect(pos_cube_x, pos_cube_y - 1, 2, 2, couleurs[couleur_cube * i]);  //boule a envoyer
+        matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[couleur_cube * i]);  //boule a envoyer
         if (i == 0) {
           pos_cube_y = pos_cube_y - 1;
         }
       } else if (incl_cube == 1) {
 
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 1, pos_cube_y, couleurs[couleur_cube * i]);
-        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 2, pos_cube_y - 1, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[couleur_cube * i]);
 
-        //matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255, 0, 255));
-        //matrix.drawLine(pos_cube_x,pos_cube_y-2, pos_cube_x+1, pos_cube_y-2, matrix.Color888(255, 0, 255));
         if (i == 0) {
           pos_cube_x = pos_cube_x + 1;
           pos_cube_y = pos_cube_y - 1;
-          if (pos_cube_x == 62 - marge_d) {  //gere la collision a droite
-            incl_cube = -1;
-          }
+          
         }
       } else if (incl_cube == -1) {
 
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 1, pos_cube_y, couleurs[couleur_cube * i]);
-        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x, pos_cube_y - 1, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[couleur_cube * i]);
 
         //matrix.drawLine(pos_cube_x+1,pos_cube_y-1, pos_cube_x+2, pos_cube_y-1, matrix.Color888(255, 0, 255));
         //matrix.drawLine(pos_cube_x,pos_cube_y-2, pos_cube_x+1, pos_cube_y-2, matrix.Color888(255, 0, 255));
@@ -278,24 +276,29 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 
       if (incl == 0) {
         if(not(deplacement)){
-        matrix.drawRect(pos, matrix.height() - 7 - hauteur, 2, 2, couleurs[couleur_cube * i]);      //boule a envoyer
+        matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube * i]);      //boule a envoyer
         }
-        matrix.drawRect(pos, matrix.height() - 4 - hauteur, 2, 4, matrix.Color888(255 * i, 0, 0));  //base de la fleche
+        matrix.fillRect(pos, matrix.height() - 4 - hauteur, 3, 4, matrix.Color888(255 * i, 0, 0));  //base de la fleche
         
       } else if (incl == -1) {
         matrix.drawLine(pos, matrix.height() - 1 - hauteur, pos - 3, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));  //base de la fleche
         matrix.drawLine(pos + 1, matrix.height() - 1 - hauteur, pos - 2, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
+        matrix.drawLine(pos + 2, matrix.height() - 1 - hauteur, pos - 1, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
 
         if(not(deplacement)){
-        matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 4, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
-        matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 5, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
+        matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube * i]);
         }
       } else if (incl == 1) {
         matrix.drawLine(pos, matrix.height() - 1 - hauteur, pos + 3, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));  //base de la fleche
         matrix.drawLine(pos + 1, matrix.height() - 1 - hauteur, pos + 4, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
+        matrix.drawLine(pos + 2, matrix.height() - 1 - hauteur, pos + 5, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
+
         if(not(deplacement)){
-        matrix.drawLine(pos + 6, matrix.height() - 6 - hauteur, pos + 5, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
-        matrix.drawLine(pos + 7, matrix.height() - 7 - hauteur, pos + 6, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos + 5, matrix.height() - 6 - hauteur, pos + 7, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
+        matrix.drawLine(pos + 6, matrix.height() - 7 - hauteur, pos + 8, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
+        matrix.drawLine(pos + 7, matrix.height() - 8 - hauteur, pos + 9, matrix.height() - 8 - hauteur, couleurs[couleur_cube * i]);
         }
       }
       if (i == 0) {
@@ -308,7 +311,6 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 
 void loop() {
   
-
   if (Serial.available() > 0) {
     char command = Serial.read();
     Serial.println(command);
