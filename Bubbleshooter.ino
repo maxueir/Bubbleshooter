@@ -1,7 +1,7 @@
 
-
-#include <DFRobot_RGBMatrix.h>  // Hardware-specific library
 #include <TimerThree.h>
+#include <DFRobot_RGBMatrix.h>  // Hardware-specific library
+
 
 #define OE 9
 #define LAT 10
@@ -18,8 +18,10 @@ DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 
 //taille d'un bubble shooter : 17 de large et x de hauteur
 int hauteur = 5;  //hauteur du jeu
-int marge = 0;    //marge du jeu
+int marge_g = 5;    //marge du jeu
+int marge_d = 10;    //marge du jeu
 int en_tete = 0;  //en_tete du jeu
+
 
 volatile int pos = 20;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
@@ -31,25 +33,32 @@ volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = -1;    //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
-int jeu[26][17];//que des 0 partout par defaut, donc aucune bille
+int largeur_jeu;
+int hauteur_jeu;
+volatile int jeu[32][32];//que des 0 partout par defaut, donc aucune bille
 
+//DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 0, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
 
 volatile bool deplacement = false;  //booleen pour indiquer si la boule est en deplacement
 
-//DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
+
 
 void setup() {
-  Serial.begin(9600);
   matrix.begin();
-  delay(1000); // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois 
+  Serial.begin(9600);
+  //delay(1500); // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois 
+  
+  matrix.fillScreen(0);
   //Timer3.initialize(75000);//defini l'intervalle
-  Timer3.initialize(1000);//deux 0 en plus
-  Timer3.attachInterrupt(deplacer_cube);
-  init_anim(); // animation de lancement du jeu
-  init_interface(); // initialise l'interface de jeu
-  initialisation_jeu();
-  afficher_jeu();
+  //Timer3.initialize(10000);//deux 0 en plus
+  //Timer3.attachInterrupt(deplacer_cube);
+  //init_anim(); // animation de lancement du jeu
+  //init_interface(); // initialise l'interface de jeu
+  //initialisation_jeu();
+  //delay(1000);
+  //Serial.print("affichage");
+  //afficher_jeu();
 }
 
 void init_anim() {
@@ -131,17 +140,38 @@ void init_interface() {
 }
 
 void afficher_jeu(){
-  for (int i = 0; i < 26; i++) {
-    for (int j = 0; j < 17; j++) {
-      jeu[i][j]=random(1,7);
+
+  for (int i = 0; i < hauteur_jeu; i++) {
+    for (int j = 0; j < largeur_jeu; j++) {
+      //Serial.println(jeu[i][j]);
+      matrix.drawRect(marge_g+j*2, en_tete+i*2, 2, 2, matrix.Color333(255,0,0));
+      
     }
   }
+  //matrix.drawRect(marge_g, en_tete, 2, 2, couleurs[4]);
+  
+
 }
 
 void initialisation_jeu(){
-  for (int i = 0; i < 9; i++) {
-    for (int j = 0; j < 17; j++) {
-      jeu[i][j]=random(1,7);
+if( 64-marge_d-marge_g%2==0){
+  marge_g=marge_g+1;
+}
+if( 64-hauteur-en_tete%2==0){
+  hauteur=hauteur+1;
+}
+
+largeur_jeu=(64-marge_d-marge_g)/2;
+hauteur_jeu=(64-hauteur-en_tete-5)/2;
+Serial.println(largeur_jeu);
+Serial.println(hauteur_jeu);
+  
+
+  for (int i = 0; i < hauteur_jeu; i++) {
+    for (int j = 0; j < largeur_jeu; j++) {
+      jeu[i][j]=2;
+      Serial.println(jeu[i][j]);
+      
     }
   }
 }
@@ -149,11 +179,11 @@ void initialisation_jeu(){
 bool estPossible(int a, int b) {  //a=dir b=incl => verifier si le deplacement est possible(ne pas sortir de la zone de jeu)
 
   if (incl + b == 0) {
-    return ((pos + a) < (63 - marge) & (pos + a) >= marge);
+    return ((pos + a) < (63 - marge_d) & (pos + a) >= marge_g);
   } else if (incl + b == 1) {
-    return ((pos + a + 6) < (63 - marge) & (pos + a) >= marge);
+    return ((pos + a + 6) < (63 - marge_d) & (pos + a) >= marge_g);
   } else if (incl + b == -1) {
-    return ((pos + a) < (63 - marge) & (pos + a - 6) >= marge);
+    return ((pos + a) < (63 - marge_d) & (pos + a - 6) >= marge_g);
   } else {
     return false;
   }
@@ -183,7 +213,7 @@ void deplacer_cube() {
         if (i == 0) {
           pos_cube_x = pos_cube_x + 1;
           pos_cube_y = pos_cube_y - 1;
-          if (pos_cube_x == 62 - marge) {  //gere la collision a droite
+          if (pos_cube_x == 62 - marge_d) {  //gere la collision a droite
             incl_cube = -1;
           }
         }
@@ -198,7 +228,7 @@ void deplacer_cube() {
           pos_cube_x = pos_cube_x - 1;
           pos_cube_y = pos_cube_y - 1;
 
-          if (pos_cube_x == marge) {  //gere la collision a gauche
+          if (pos_cube_x == marge_g) {  //gere la collision a gauche
             incl_cube = 1;
           }
         }
@@ -264,12 +294,12 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
+  
 
   if (Serial.available() > 0) {
     char command = Serial.read();
     Serial.println(command);
     if (command == 'a') {
-      Serial.print("a");
       deplacer(0, -1);
     } else if (command == 'e') {
       deplacer(0, 1);
