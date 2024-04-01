@@ -1,6 +1,10 @@
 
 #include <TimerThree.h>
 #include <DFRobot_RGBMatrix.h>  // Hardware-specific library
+#include <gamma.h>
+#include <Adafruit_GFX.h>
+
+
 
 
 #define OE 9
@@ -35,7 +39,7 @@ volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau 
 
 int largeur_jeu;
 int hauteur_jeu;
-volatile int jeu[32][32];//que des 0 partout par defaut, donc aucune bille
+short jeu[27][27];//que des 0 partout par defaut, donc aucune bille
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 0, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
@@ -47,18 +51,18 @@ volatile bool deplacement = false;  //booleen pour indiquer si la boule est en d
 void setup() {
   matrix.begin();
   Serial.begin(9600);
-  //delay(1500); // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois 
-  
+  delay(1500); // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois 
+  Serial.println("ici");
   matrix.fillScreen(0);
   //Timer3.initialize(75000);//defini l'intervalle
   //Timer3.initialize(10000);//deux 0 en plus
   //Timer3.attachInterrupt(deplacer_cube);
   //init_anim(); // animation de lancement du jeu
   //init_interface(); // initialise l'interface de jeu
-  //initialisation_jeu();
+  initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
-  //afficher_jeu();
+  afficher_jeu();
 }
 
 void init_anim() {
@@ -139,12 +143,19 @@ void init_interface() {
   matrix.drawChar(matrix.width()-7, matrix.height()-9, '1', matrix.Color333(255,0,0), 0, 1); 
 }
 
-void afficher_jeu(){
+void afficher_jeu(){//3, fill, 1de marge en x 0 en y 
 
   for (int i = 0; i < hauteur_jeu; i++) {
     for (int j = 0; j < largeur_jeu; j++) {
-      //Serial.println(jeu[i][j]);
-      matrix.drawRect(marge_g+j*2, en_tete+i*2, 2, 2, matrix.Color333(255,0,0));
+      //Serial.println(couleurs[jeu[i][j]]);
+      //int aux=jeu[i][j];
+      if(i%2==0){
+        matrix.fillRect(marge_g+j*3 +j, en_tete+i*3 , 3, 3, couleurs[jeu[i][j]]);
+      }
+      else{
+        matrix.fillRect(marge_g+j*3 +2+j, en_tete+i*3, 3, 3, couleurs[jeu[i][j]]);
+      }
+      
       
     }
   }
@@ -165,12 +176,14 @@ largeur_jeu=(64-marge_d-marge_g)/2;
 hauteur_jeu=(64-hauteur-en_tete-5)/2;
 Serial.println(largeur_jeu);
 Serial.println(hauteur_jeu);
-  
 
   for (int i = 0; i < hauteur_jeu; i++) {
     for (int j = 0; j < largeur_jeu; j++) {
-      jeu[i][j]=2;
-      Serial.println(jeu[i][j]);
+      //Serial.println("hey");
+      int aux=random(1,7);
+      jeu[i][j]=aux;
+      
+      //Serial.println(jeu[i][j]);
       
     }
   }
