@@ -31,6 +31,10 @@ int nb_couleur=7;
 volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
+int ligne=0;//ligne et colonne du cube pour ajuster sa position
+int colonne=0;
+
+
 volatile int score = 0; // score
 
 volatile int pos_cube_x = 0;    //position de la boule en bas a gauche en x
@@ -38,7 +42,7 @@ volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = 0;    //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
-short jeu[15][15];//que des 0 partout par defaut, donc aucune bille
+short jeu[17][15];//que des 0 partout par defaut, donc aucune bille
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 0, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
@@ -144,7 +148,7 @@ void init_interface() {
 
 void afficher_jeu(){//3, fill, 1de marge en x 0 en y 
   
-  for (int i = 0; i < 15; i++) {
+  for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
 
       if(i%2==0){
@@ -164,10 +168,14 @@ void afficher_jeu(){//3, fill, 1de marge en x 0 en y
 void initialisation_jeu(){
 
   deplacer(1,0);
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
-      jeu[i][j]=random(1,nb_couleur);
-      
+      if (i<9){
+        jeu[i][j]=random(1,nb_couleur);
+      }
+      else{
+        jeu[i][j]=0;
+      }
     }
   }
   afficher_jeu();
@@ -176,24 +184,36 @@ void initialisation_jeu(){
 bool estPossible(int a, int b) {  //a=dir b=incl => verifier si le deplacement est possible(ne pas sortir de la zone de jeu)
 
   if (incl + b == 0) {
-    return ((pos + a) < (62 - marge_d) & (pos + a) >= marge_g);
+    return ((pos + a) < (62 - marge_d) && (pos + a) >= marge_g);
   } else if (incl + b == 1) {
-    return ((pos + a + 6) < (61 - marge_d) & (pos + a) >= marge_g);
+    return ((pos + a + 6) < (61 - marge_d) && (pos + a) >= marge_g);
   } else if (incl + b == -1) {
-    return ((pos + a) < (62 - marge_d) & (pos + a - 7) >= marge_g);
+    return ((pos + a) < (62 - marge_d) && (pos + a - 7) >= marge_g);
   } else {
     return false;
   }
 }
 
 bool case_libre() {//indique si le cube peut avancer ou s'il vient de se bloquer
-  if(pos_cube_y%3==0){//si la prochaine case peut être un cube ou le bord
+if(pos_cube_y>54){
+  return true;
+}  
+else if(pos_cube_y%3==0){//si la prochaine case peut être un cube ou le bord
     
-    int ligne=pos_cube_y/3;
-    int colonne=pos_cube_x/3;
-    //Serial.println(ligne);
-    //Serial.println(jeu[ligne][colonne]);
-    return (jeu[ligne][colonne]==0) && (pos_cube_y > 2 + en_tete);
+    ligne=pos_cube_y/3 -1;
+    if(ligne%2==0){
+      colonne=pos_cube_x/4;
+    }
+    else{
+      colonne=15 - (61-pos_cube_x)/4;
+    }
+    
+    //Serial.println(pos_cube_y);
+    Serial.println(ligne);
+    Serial.println(colonne);
+    //Serial.println(jeu[ligne-1][colonne+1]);
+    //Serial.println(bool((pos_cube_y > 2 + en_tete) && jeu[ligne-1][colonne]==0));
+    return ((pos_cube_y > 2 + en_tete) && jeu[ligne-1][colonne]==0) ;
   }
   else{//sinon
     return true;
@@ -202,7 +222,7 @@ bool case_libre() {//indique si le cube peut avancer ou s'il vient de se bloquer
 }
 
 void deplacer_cube() {
-  if (deplacement & case_libre()) {
+  if (deplacement && case_libre()) {
     for (int i = 0; i < 2; i++) {
 
       if (incl_cube == 0) {
@@ -267,6 +287,20 @@ void deplacer_cube() {
     }
   } else if (deplacement){
     deplacement = false;
+    jeu[ligne][colonne]=couleur_cube;//mise a jour du jeu
+
+    if(incl_cube==0){//effacage du cube mal positionné
+      matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
+    }
+    
+
+    if(ligne%2==0){//affichage du cube repositionné
+        matrix.fillRect(marge_g+colonne*3 +colonne, en_tete+ligne*3 , 3, 3, couleurs[jeu[ligne][colonne]]);
+      }
+      else{
+        matrix.fillRect(marge_g+colonne*3 +2+colonne, en_tete+ligne*3, 3, 3, couleurs[jeu[ligne][colonne]]);
+      }
+
     couleur_cube = random(1, nb_couleur);
     if (incl == 0) {
       //pos_cube_x = pos;
