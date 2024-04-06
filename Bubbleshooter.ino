@@ -26,7 +26,7 @@ int marge_g = 1;  //marge du jeu
 int marge_d = 1;  //marge du jeu
 int en_tete = 1;  //en_tete du jeu
 
-int nb_couleur = 5;
+int nb_couleur = 2;
 
 volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
@@ -42,7 +42,7 @@ volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
-short jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
+volatile int jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 0, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
@@ -216,9 +216,10 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       visite[i][j] = false;
     }
   }
-  PaireInt res[255];
+  int taille_listes=75;//apparemment la limte sinon bug de matrice
+  PaireInt res[taille_listes];
   int taille = 0;      //taille du paquet de retour
-  PaireInt file[255];  //file d'attente de couple; (x,y)
+  PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
   int debut = 0;       //la ou on defile
   int fin = 1;         //la ou on enfile
 
@@ -238,7 +239,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 
     res[taille] = z;  //on ajoute a au retour
     taille++;
-    Serial.println(taille);
+    //Serial.println(taille);
 
 
     //on calcule tous les voisins de a
@@ -276,15 +277,16 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       PaireInt w = voisins[i];
       int x = w.fst;
       int y = w.snd;
-      Serial.print("x: ");
-      Serial.println(x);
-      Serial.print("y: ");
-      Serial.println(y);
+      //Serial.print("x: ");
+      //Serial.println(x);
+      //Serial.print("y: ");
+      //Serial.println(y);
       
-      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x] == coul) {//condition qui fait bugger
+      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x] == coul && fin!=taille_listes) {
         //ajouter w dans file attente
         visite[y][x]=true;
-        file[fin] = w;
+        file[fin].fst=x;
+        file[fin].snd=y;
         fin++;
       }
     }
@@ -295,6 +297,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       PaireInt pop = res[k];
       int j = pop.fst;
       int i = pop.snd;
+      jeu[i][j]=0;
       if (i % 2 == 0) {
         matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       } else {
