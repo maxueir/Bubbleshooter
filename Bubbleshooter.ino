@@ -26,7 +26,7 @@ int marge_g = 1;  //marge du jeu
 int marge_d = 1;  //marge du jeu
 int en_tete = 1;  //en_tete du jeu
 
-int nb_couleur = 2;
+int nb_couleur = 3;
 
 volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
@@ -217,66 +217,94 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
     }
   }
   int taille_listes=75;//apparemment la limte sinon bug de matrice
-  PaireInt res[taille_listes];
+  //PaireInt res[taille_listes];
+  int res_x[taille_listes];
+  int res_y[taille_listes];
   int taille = 0;      //taille du paquet de retour
-  PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
+  //PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
+  int file_x[taille_listes];
+  int file_y[taille_listes];
   int debut = 0;       //la ou on defile
   int fin = 1;         //la ou on enfile
 
   visite[lig][col] = true;  //on visite la boule
 
-  file[0].fst = col;
-  file[0].snd = lig;
+  //file[0].fst = col;
+  //file[0].snd = lig;
+
+  file_x[0] = col;
+  file_y[0] = lig;
   
   while (debut != fin) {
-    PaireInt z = file[debut];  //on defile dans a
-    int x = z.fst;
-    int y = z.snd;
+    //PaireInt z = file[debut];  //on defile dans a
+    //int x = z.fst;
+    //int y = z.snd;
+    int x = file_x[debut];
+    int y = file_y[debut];
+    
     debut = debut + 1;
 
 
 
 
-    res[taille] = z;  //on ajoute a au retour
+    //res[taille] = z;  //on ajoute a au retour
+    res_x[taille] = x;
+    res_y[taille] = y;
     taille++;
     //Serial.println(taille);
 
 
     //on calcule tous les voisins de a
 
-    PaireInt voisins[6];
+    //PaireInt voisins[6];
+    int voisins_x[6];
+    int voisins_y[6];
     int depl;
     if (y % 2 == 0) {
       depl = -1;
     } else {
       depl = 1;
     }
-    voisins[0].fst = x;
-    voisins[0].snd = y - 1;
+    //voisins[0].fst = x;
+    //voisins[0].snd = y - 1;
+    voisins_x[0] = x;
+    voisins_y[0]= y - 1;
 
-    voisins[1].fst = x + depl;
-    voisins[1].snd = y - 1;
+    //voisins[1].fst = x + depl;
+    //voisins[1].snd = y - 1;
+    voisins_x[1] = x + depl;
+    voisins_y[1]= y - 1;
 
-    voisins[2].fst = x + 1;
-    voisins[2].snd = y;
+    //voisins[2].fst = x + 1;
+    //voisins[2].snd = y;
+    voisins_x[2] = x+1;
+    voisins_y[2]= y ;
 
-    voisins[3].fst = x - 1;
-    voisins[3].snd = y;
+    //voisins[3].fst = x - 1;
+    //voisins[3].snd = y;
+    voisins_x[3] = x-1;
+    voisins_y[3]= y ;
 
-    voisins[4].fst = x;
-    voisins[4].snd = y + 1;
+    //voisins[4].fst = x;
+    //voisins[4].snd = y + 1;
+    voisins_x[4] = x;
+    voisins_y[4]= y + 1;
 
-    voisins[5].fst = x + depl;
-    voisins[5].snd = y + 1;
+    //voisins[5].fst = x + depl;
+    //voisins[5].snd = y + 1;
+    voisins_x[5] = x + depl;
+    voisins_y[5]= y + 1;
 
 
 
     //on visite tous les voisins de a possibles
 
     for (int i = 0; i < 6; i++) {
-      PaireInt w = voisins[i];
-      int x = w.fst;
-      int y = w.snd;
+      //PaireInt w = voisins[i];
+      //int x = w.fst;
+      //int y = w.snd;
+      int x = voisins_x[i];
+      int y = voisins_y[i];
       //Serial.print("x: ");
       //Serial.println(x);
       //Serial.print("y: ");
@@ -285,8 +313,10 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x] == coul && fin!=taille_listes) {
         //ajouter w dans file attente
         visite[y][x]=true;
-        file[fin].fst=x;
-        file[fin].snd=y;
+        //file[fin].fst=x;
+        //file[fin].snd=y;
+        file_x[fin]=x;
+        file_y[fin]=y;
         fin++;
       }
     }
@@ -294,9 +324,11 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
   
   if (taille > 2) {
     for (int k = 0; k < taille; k++) {
-      PaireInt pop = res[k];
-      int j = pop.fst;
-      int i = pop.snd;
+      //PaireInt pop = res[k];
+      //int j = pop.fst;
+      //int i = pop.snd;
+      int j = res_x[k];
+      int i = res_y[k];
       jeu[i][j]=0;
       if (i % 2 == 0) {
         matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
