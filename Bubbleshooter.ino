@@ -26,7 +26,7 @@ int marge_g = 1;  //marge du jeu
 int marge_d = 1;  //marge du jeu
 int en_tete = 1;  //en_tete du jeu
 
-int nb_couleur = 4;
+int nb_couleur = 5;
 
 volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
@@ -226,7 +226,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 
   file[0].fst = col;
   file[0].snd = lig;
-
+  
   while (debut != fin) {
     PaireInt z = file[debut];  //on defile dans a
     int x = z.fst;
@@ -238,6 +238,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 
     res[taille] = z;  //on ajoute a au retour
     taille++;
+    Serial.println(taille);
 
 
     //on calcule tous les voisins de a
@@ -275,24 +276,29 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       PaireInt w = voisins[i];
       int x = w.fst;
       int y = w.snd;
-      if (x <= 16 && x >= 0 && y >= 0 && y <= 15 && !visite[y][x] && jeu[y][x] == coul) {
+      Serial.print("x: ");
+      Serial.println(x);
+      Serial.print("y: ");
+      Serial.println(y);
+      
+      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x] == coul) {//condition qui fait bugger
         //ajouter w dans file attente
-
+        visite[y][x]=true;
         file[fin] = w;
         fin++;
       }
     }
   }
-
+  
   if (taille > 2) {
     for (int k = 0; k < taille; k++) {
       PaireInt pop = res[k];
       int j = pop.fst;
       int i = pop.snd;
       if (i % 2 == 0) {
-        matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]]);
+        matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       } else {
-        matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]]);
+        matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       }
     }
   }
@@ -363,7 +369,7 @@ void deplacer_cube() {
   } else if (deplacement) {
     deplacement = false;
     jeu[ligne][colonne] = couleur_cube;  //mise a jour du jeu
-    exploser(ligne, colonne, couleur_cube);
+    
 
     if (incl_cube == 0) {  //effacage du cube mal positionné
       matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
@@ -375,6 +381,8 @@ void deplacer_cube() {
     } else {
       matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne]]);
     }
+
+    exploser(ligne, colonne, couleur_cube);
 
     couleur_cube = random(1, nb_couleur);
     if (incl == 0) {
