@@ -45,7 +45,8 @@ volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
-volatile int jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
+volatile uint8_t jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
+bool visite[17][15];
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
@@ -135,18 +136,125 @@ void init_anim() {
   initialisation_jeu();
 }
 
-void boules_isolees() {//peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de soit si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
+void boules_isolees() {//peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
+  
 
-  bool valides[17][15];
+  //bool valides[17][15];//normalement ici; visite doit etre remplacé par valides mais pour manque de place (bug de matrice), on reutilise visite qui est lui aussi un tableau de bool
+  //forward propagation; on prends le probleme à l'envers; on regarde toutes les billes accessibles depuis la ligne -1
+  for (int i = 0; i < 17; i++) {
+    for (int j = 0; j < 15; j++) {
+      visite[i][j] = false;
+    }
+  }
 
+  uint8_t file_x[255];
+  uint8_t file_y[255];
+
+  int debut = 0;  // la ou on defile
+  int fin = 0;    // la ou on enfile
+
+  for(int i=0;i<15;i++){
+    if(jeu[0][i]!=0){
+      visite[0][i]=true;
+      file_x[fin]=i;
+      file_y[fin]=0;
+      fin++;
+    }
+  }
+
+  while(debut!=fin){
+    //Serial.println(fin);
+    int x=file_x[debut];
+    int y=file_y[debut];
+    debut++;
+
+    int depl;
+    if (y % 2 == 0) {
+      depl = -1;
+    } else {
+      depl = 1;
+    }
+
+    int voisins_x[6];
+    int voisins_y[6];
+
+    voisins_x[0] = x;
+    voisins_y[0] = y - 1;
+
+    //voisins[1].fst = x + depl;
+    //voisins[1].snd = y - 1;
+    voisins_x[1] = x + depl;
+    voisins_y[1] = y - 1;
+
+    //voisins[2].fst = x + 1;
+    //voisins[2].snd = y;
+    voisins_x[2] = x + 1;
+    voisins_y[2] = y;
+
+    //voisins[3].fst = x - 1;
+    //voisins[3].snd = y;
+    voisins_x[3] = x - 1;
+    voisins_y[3] = y;
+
+    //voisins[4].fst = x;
+    //voisins[4].snd = y + 1;
+    voisins_x[4] = x;
+    voisins_y[4] = y + 1;
+
+    //voisins[5].fst = x + depl;
+    //voisins[5].snd = y + 1;
+    voisins_x[5] = x + depl;
+    voisins_y[5] = y + 1;
+
+    for (int i = 0; i < 6; i++) {
+      //PaireInt w = voisins[i];
+      //int x = w.fst;
+      //int y = w.snd;
+      int x = voisins_x[i];
+      int y = voisins_y[i];
+      //Serial.print("x: ");
+      //Serial.println(x);
+      //Serial.print("y: ");
+      //Serial.println(y);
+
+      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x]!=0 ) {//&& fin != taille_listes
+        //ajouter w dans file attente
+        visite[y][x] = true;
+        //file[fin].fst=x;
+        //file[fin].snd=y;
+        file_x[fin] = x;
+        file_y[fin] = y;
+        fin++;
+      }
+    }
+
+  }
+  for (int i = 0; i < 17; i++) {
+    for (int j = 0; j < 15; j++) {
+      if(!visite[i][j] && jeu[i][j]!=0){
+        jeu[i][j]=0;
+        if (i % 2 == 0) {
+        matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
+        } else {
+        matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
+        }
+      }
+    }
+  }
+  if (numero_tir == nb_tirs) {
+      numero_tir = 0;
+      descendre();
+    }
+
+
+
+
+  /*
   for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
       if (i == 0) {
         if (jeu[i][j] != 0) {
-          valides[i][j] = true;
-        }
-        else{
-          valides[i][j] = false;
+          visite[i][j] = true;
         }
       } else {
         int depl;
@@ -156,11 +264,13 @@ void boules_isolees() {//peut etre reduit a un pb de graphe -> chaque bille est 
           depl = 1;
         }
 
-
-        if ((valides[i - 1][j] || valides[i - 1][j + depl]) && jeu[i][j] != 0) {
-          valides[i][j] = true;
+        int aux=j+depl;
+        if(aux>14 || aux<0){
+          aux=j;
+        }
+        if ((visite[i - 1][j] || visite[i - 1][aux]) && jeu[i][j] != 0) {
+          visite[i][j] = true;
         } else {
-          valides[i][j]=false;
           if (jeu[i][j] != 0) {
             jeu[i][j] = 0;
 
@@ -173,7 +283,7 @@ void boules_isolees() {//peut etre reduit a un pb de graphe -> chaque bille est 
         }
       }
     }
-  }
+  }*/
 }
 
 void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle ligne
@@ -241,12 +351,22 @@ void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 
 void initialisation_jeu() {
 
-  deplacer(1, 0);
+  deplacer(1, 0);//permet d'afficher le canon
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 15; j++) {
       jeu[i][j] = random(1, nb_couleur);
     }
   }
+  
+  /*jeu[0][10]=3;
+  jeu[0][9]=2;
+  jeu[1][10]=1;
+  jeu[2][10]=4;
+  jeu[2][9]=3;
+  jeu[3][9]=3;
+  jeu[3][8]=4;
+  jeu[2][8]=3;*/
+
   afficher_jeu();
 }
 
@@ -288,21 +408,21 @@ bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloqu
 
 void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 
-  bool visite[17][15];
+  
 
   for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
       visite[i][j] = false;
     }
   }
-  int taille_listes = 75;  //apparemment la limte sinon bug de matrice
+  int taille_listes = 255;  //apparemment la limte sinon bug de matrice
   //PaireInt res[taille_listes];
-  int res_x[taille_listes];
-  int res_y[taille_listes];
+  uint8_t res_x[taille_listes];
+  uint8_t res_y[taille_listes];
   int taille = 0;  //taille du paquet de retour
   //PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
-  int file_x[taille_listes];
-  int file_y[taille_listes];
+  uint8_t file_x[taille_listes];
+  uint8_t file_y[taille_listes];
   int debut = 0;  //la ou on defile
   int fin = 1;    //la ou on enfile
 
@@ -336,8 +456,8 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
     //on calcule tous les voisins de a
 
     //PaireInt voisins[6];
-    int voisins_x[6];
-    int voisins_y[6];
+    uint8_t voisins_x[6];
+    uint8_t voisins_y[6];
     int depl;
     if (y % 2 == 0) {
       depl = -1;
@@ -417,10 +537,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
     }
   } else {
     numero_tir++;
-    if (numero_tir == nb_tirs) {
-      numero_tir = 0;
-      descendre();
-    }
+    
   }
   Serial.println("fin");
 }
