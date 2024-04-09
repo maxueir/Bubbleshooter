@@ -23,10 +23,10 @@ DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 //taille d'un bubble shooter : 17 de large et 16 de hauteur (17=> peerdu)
 int hauteur = 1;  //hauteur du jeu
 int marge_g = 1;  //marge du jeu
-int marge_d = 1;  //marge du jeu
+int marge_d = 2;  //marge du jeu
 int en_tete = 1;  //en_tete du jeu
 
-int nb_couleur = 3;
+int nb_couleur = 7;//affiche nb_couleur - 1 dans le jeu
 
 volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
@@ -45,13 +45,13 @@ volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau 
 volatile int jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
-color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 0, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
+color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
 
 volatile bool deplacement = false;  //booleen pour indiquer si la boule est en deplacement
 
 struct PaireInt {
-  int fst;  //premier du couple
-  int snd;  //second du couple
+  int fst;  //premier du couple, coordonnée en x
+  int snd;  //second du couple, coordonnée en y
 };
 
 void setup() {
@@ -129,6 +129,7 @@ void init_anim() {
       matrix.fillScreen(matrix.Color888(0, 0, 0));
     }
   }
+  initialisation_jeu();
 }
 
 void init_interface() {
