@@ -26,7 +26,10 @@ int marge_g = 1;  //marge du jeu
 int marge_d = 2;  //marge du jeu
 int en_tete = 1;  //en_tete du jeu
 
-int nb_couleur = 7;//affiche nb_couleur - 1 dans le jeu
+int nb_couleur = 3;       //affiche nb_couleur - 1 dans le jeu
+int nb_tirs = 3;          //nb de tirs avant que ca descende
+int numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
+int taille_descente = 1;  //indique de combien on descent par descente
 
 volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
@@ -132,6 +135,79 @@ void init_anim() {
   initialisation_jeu();
 }
 
+void boules_isolees() {//peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de soit si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
+
+  bool valides[17][15];
+
+  for (int i = 0; i < 17; i++) {
+    for (int j = 0; j < 15; j++) {
+      if (i == 0) {
+        if (jeu[i][j] != 0) {
+          valides[i][j] = true;
+        }
+        else{
+          valides[i][j] = false;
+        }
+      } else {
+        int depl;
+        if (i % 2 == 0) {
+          depl = -1;
+        } else {
+          depl = 1;
+        }
+
+
+        if ((valides[i - 1][j] || valides[i - 1][j + depl]) && jeu[i][j] != 0) {
+          valides[i][j] = true;
+        } else {
+          valides[i][j]=false;
+          if (jeu[i][j] != 0) {
+            jeu[i][j] = 0;
+
+            if (i % 2 == 0) {
+              matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
+            } else {
+              matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle ligne
+  bool verif = true;  //verifie si une bille fait perdre le joueur
+
+  for (int i = 17 - taille_descente; i < 17; i++) {  //a remplacer par un while pour la complexité
+    for (int j = 0; j < 15; j++) {
+      if (jeu[i][j] != 0) {
+        verif = false;
+      }
+    }
+  }
+
+  if (verif) {
+    for (int i = 16; i >= 0; i--) {
+      for (int j = 14; j >= 0; j--) {
+        if (i < taille_descente) {
+          jeu[i][j] = random(1, nb_couleur);
+        } else {
+          jeu[i][j] = jeu[i - taille_descente][j];
+        }
+      }
+    }
+    afficher_jeu();
+  } else {
+    perdu();
+  }
+}
+
+void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
+  Serial.println("LE NUL IL A PERDU");
+  //a completer
+}
+
 void init_interface() {
   matrix.drawRect(0, 0, matrix.width(), matrix.height(), matrix.Color333(7, 7, 0));
   matrix.drawLine(8, matrix.height() - 11, matrix.width() - 1, matrix.height() - 11, matrix.Color333(7, 7, 0));
@@ -146,6 +222,8 @@ void init_interface() {
   matrix.drawChar(matrix.width() - 14, matrix.height() - 9, '9', matrix.Color333(255, 0, 0), 0, 1);
   matrix.drawChar(matrix.width() - 7, matrix.height() - 9, '1', matrix.Color333(255, 0, 0), 0, 1);
 }
+
+
 
 void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 
@@ -217,16 +295,16 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       visite[i][j] = false;
     }
   }
-  int taille_listes=75;//apparemment la limte sinon bug de matrice
+  int taille_listes = 75;  //apparemment la limte sinon bug de matrice
   //PaireInt res[taille_listes];
   int res_x[taille_listes];
   int res_y[taille_listes];
-  int taille = 0;      //taille du paquet de retour
+  int taille = 0;  //taille du paquet de retour
   //PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
   int file_x[taille_listes];
   int file_y[taille_listes];
-  int debut = 0;       //la ou on defile
-  int fin = 1;         //la ou on enfile
+  int debut = 0;  //la ou on defile
+  int fin = 1;    //la ou on enfile
 
   visite[lig][col] = true;  //on visite la boule
 
@@ -235,14 +313,14 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 
   file_x[0] = col;
   file_y[0] = lig;
-  
+
   while (debut != fin) {
     //PaireInt z = file[debut];  //on defile dans a
     //int x = z.fst;
     //int y = z.snd;
     int x = file_x[debut];
     int y = file_y[debut];
-    
+
     debut = debut + 1;
 
 
@@ -269,32 +347,32 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
     //voisins[0].fst = x;
     //voisins[0].snd = y - 1;
     voisins_x[0] = x;
-    voisins_y[0]= y - 1;
+    voisins_y[0] = y - 1;
 
     //voisins[1].fst = x + depl;
     //voisins[1].snd = y - 1;
     voisins_x[1] = x + depl;
-    voisins_y[1]= y - 1;
+    voisins_y[1] = y - 1;
 
     //voisins[2].fst = x + 1;
     //voisins[2].snd = y;
-    voisins_x[2] = x+1;
-    voisins_y[2]= y ;
+    voisins_x[2] = x + 1;
+    voisins_y[2] = y;
 
     //voisins[3].fst = x - 1;
     //voisins[3].snd = y;
-    voisins_x[3] = x-1;
-    voisins_y[3]= y ;
+    voisins_x[3] = x - 1;
+    voisins_y[3] = y;
 
     //voisins[4].fst = x;
     //voisins[4].snd = y + 1;
     voisins_x[4] = x;
-    voisins_y[4]= y + 1;
+    voisins_y[4] = y + 1;
 
     //voisins[5].fst = x + depl;
     //voisins[5].snd = y + 1;
     voisins_x[5] = x + depl;
-    voisins_y[5]= y + 1;
+    voisins_y[5] = y + 1;
 
 
 
@@ -310,19 +388,19 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       //Serial.println(x);
       //Serial.print("y: ");
       //Serial.println(y);
-      
-      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x] == coul && fin!=taille_listes) {
+
+      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x] == coul && fin != taille_listes) {
         //ajouter w dans file attente
-        visite[y][x]=true;
+        visite[y][x] = true;
         //file[fin].fst=x;
         //file[fin].snd=y;
-        file_x[fin]=x;
-        file_y[fin]=y;
+        file_x[fin] = x;
+        file_y[fin] = y;
         fin++;
       }
     }
   }
-  
+
   if (taille > 2) {
     for (int k = 0; k < taille; k++) {
       //PaireInt pop = res[k];
@@ -330,12 +408,18 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       //int i = pop.snd;
       int j = res_x[k];
       int i = res_y[k];
-      jeu[i][j]=0;
+      jeu[i][j] = 0;
       if (i % 2 == 0) {
         matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       } else {
         matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       }
+    }
+  } else {
+    numero_tir++;
+    if (numero_tir == nb_tirs) {
+      numero_tir = 0;
+      descendre();
     }
   }
   Serial.println("fin");
@@ -405,7 +489,7 @@ void deplacer_cube() {
   } else if (deplacement) {
     deplacement = false;
     jeu[ligne][colonne] = couleur_cube;  //mise a jour du jeu
-    
+
 
     if (incl_cube == 0) {  //effacage du cube mal positionné
       matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
@@ -417,8 +501,12 @@ void deplacer_cube() {
     } else {
       matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne]]);
     }
-
-    exploser(ligne, colonne, couleur_cube);
+    if (ligne == 17) {
+      perdu();
+    } else {
+      exploser(ligne, colonne, couleur_cube);
+      boules_isolees();
+    }
 
     couleur_cube = random(1, nb_couleur);
     if (incl == 0) {
