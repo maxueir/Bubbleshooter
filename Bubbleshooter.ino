@@ -27,7 +27,7 @@ int marge_d = 2;  //marge du jeu
 int en_tete = 1;  //en_tete du jeu
 
 int nb_couleur = 7;       //affiche nb_couleur - 1 dans le jeu
-int nb_tirs = 10;          //nb de tirs avant que ca descende
+int nb_tirs = 4;          //nb de tirs avant que ca descende
 int numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
 int taille_descente = 1;  //indique de combien on descent par descente
 
@@ -37,6 +37,8 @@ volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=
 int ligne = 0;  //ligne et colonne du cube pour ajuster sa position
 int colonne = 0;
 
+bool est_pause = false;
+int tps = 0;
 
 volatile int score = 0;  // score
 
@@ -59,13 +61,14 @@ struct PaireInt {
 };
 
 void setup() {
+  randomSeed(analogRead(0));
   matrix.begin();
   Serial.begin(9600);
   delay(1100);  // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois
   //Serial.println("ici");
   //matrix.fillScreen(0);
   //Timer3.initialize(75000);//defini l'intervalle
-  Timer3.initialize(250000);  //definit l'intervalle un 0 en -
+  Timer3.initialize(25000);  //definit l'intervalle un 0 en -
   Timer3.attachInterrupt(deplacer_cube);
   //init_anim(); // animation de lancement du jeu
   //init_interface(); // initialise l'interface de jeu
@@ -307,6 +310,7 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
       }
     }
     afficher_jeu();
+    boules_isolees();
   } else {
     perdu();
   }
@@ -349,7 +353,7 @@ void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 }
 
 void initialisation_jeu() {
-
+  //randomSeed(analogRead(0));
   deplacer(1, 0);  //permet d'afficher le canon
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 15; j++) {
@@ -385,53 +389,91 @@ bool estPossible(int a, int b) {  //a=dir b=incl => verifier si le deplacement e
 bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloquer
   if (pos_cube_y > 54) {
     return true;
-  } else if (pos_cube_y % 3 == 0) {  //si la prochaine case peut être un cube ou le bord
+  } else if (incl_cube == 0 && pos_cube_y % 3 == 0) {  //si la prochaine case peut être un cube ou le bord
 
-    if (incl_cube == 0) {
-      //ligne = pos_cube_y / 3 - 1;
-      ligne = (pos_cube_y-1) / 3 ;
-      if (ligne % 2 == 0) {
 
-        colonne = pos_cube_x / 4;
-        if(pos_cube_x!=1 && (pos_cube_x-1)%4==0){//si il est entre deux cubes
-          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0  && jeu[ligne - 1][colonne-1] == 0);
-        }
-        else{
-          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne-1] == 0);
-        }
-        
+    //ligne = pos_cube_y / 3 - 1;
+    ligne = (pos_cube_y - 1) / 3;
+    if (ligne % 2 == 0) {
+      Serial.println(pos_cube_x);
+      colonne = pos_cube_x / 4;
 
-      } else {
-        
-        //colonne = 15 - (61 - pos_cube_x) / 4;
-        colonne= (pos_cube_x-1)/4;
-
-        if(pos_cube_x!=59 && (pos_cube_x+1)%4==0){//si il est entre deux cubes
-          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0  && jeu[ligne - 1][colonne+1] == 0);
-        }
-        else{
-          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
-        }
-
-        //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      if (pos_cube_x == 1 || (pos_cube_x - 1) % 4 == 1 || (pos_cube_x - 1) % 4 == 2) {  // si il est en 1 ou a gauche ou en face
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      } else if ((pos_cube_x - 1) % 4 == 0) {  //si il est entre deux cubes
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne - 1] == 0);
+      } else {  //si il est a droite
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] == 0);
       }
 
-      //Serial.println(pos_cube_y);
-      //Serial.println(ligne);
-      //Serial.println(colonne);
-      //Serial.println(jeu[ligne-1][colonne+1]);
-      //Serial.println(bool((pos_cube_y > 2 + en_tete) && jeu[ligne-1][colonne]==0));
-      
+
+    } else {
+
+      //colonne = 15 - (61 - pos_cube_x) / 4;
+      colonne = (pos_cube_x - 1) / 4;
+      Serial.println(pos_cube_x);
+      if (pos_cube_x == 59 || (pos_cube_x + 1) % 4 == 2 || (pos_cube_x + 1) % 4 == 3) {  // si il est en 59 ou a droite ou en face
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne + 1] == 0);
+      } else {  //si il est a gauche
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] == 0);
+      }
+
+      //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
     }
 
-    else if (incl_cube == 1) {
+    //Serial.println(pos_cube_y);
+    //Serial.println(ligne);
+    //Serial.println(colonne);
+    //Serial.println(jeu[ligne-1][colonne+1]);
+    //Serial.println(bool((pos_cube_y > 2 + en_tete) && jeu[ligne-1][colonne]==0));
 
-    } else if (incl_cube == -1) {
+
+  } else if (incl_cube == 1) {
+    //ligne = pos_cube_y / 3 - 1;
+    if(pos_cube_y % 3 == 0){
+    ligne = (pos_cube_y - 1) / 3;
+    if (ligne % 2 == 0) {
+      Serial.println(pos_cube_x);
+      colonne = (pos_cube_x+2) / 4;
+      if(pos_cube_x+5){//TODO
+
+      }
+      if ((pos_cube_x + 1) % 4 == 1 || (pos_cube_x + 1) % 4 == 2) {  // si il est en 1 ou a gauche ou en face
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne - 1] == 0);
+      } else {  //si il est a droite
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] == 0);
+      }
+
+
+    } else {
+
+      //colonne = 15 - (61 - pos_cube_x) / 4;
+      colonne = (pos_cube_x - 1) / 4;
+      Serial.println(pos_cube_x);
+      if (pos_cube_x == 59 || (pos_cube_x + 1) % 4 == 2 || (pos_cube_x + 1) % 4 == 3) {  // si il est en 59 ou a droite ou en face
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne + 1] == 0);
+      } else {  //si il est a gauche
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] == 0);
+      }
+
+      //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+    }}
+    else{
+
     }
 
-  } else {  //sinon
-    return true;
+  } else if (incl_cube == -1) {
   }
+
+else {  //sinon
+  return true;
+}
 }
 
 void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
@@ -550,6 +592,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
   }
 
   if (taille > 2) {
+    //for(int h=0 ; h<3; h++){
     for (int k = 0; k < taille; k++) {
       //PaireInt pop = res[k];
       //int j = pop.fst;
@@ -557,12 +600,23 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       int j = res_x[k];
       int i = res_y[k];
       jeu[i][j] = 0;
+      /*if(h==2){
+      jeu[i][j] = 0;}
+      int auxiliaire2;
+      if(h==1){
+        auxiliaire2=jeu[i][j];
+      }
+      else{
+        auxiliaire2=0;
+      }*/
       if (i % 2 == 0) {
         matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       } else {
         matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       }
-    }
+      //est_pause=true;
+      //tps=millis();
+    }  //}
   } else {
     numero_tir++;
   }
@@ -738,6 +792,16 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
+  /*if(est_pause){
+    Serial.println("stop");
+    
+    Timer3.stop();
+    if(millis()-tps>1000){
+      est_pause=false;
+      Timer3.start();
+      Serial.println("plus stop");
+    }
+  }*/
 
   if (Serial.available() > 0) {
     char command = Serial.read();
