@@ -355,11 +355,13 @@ void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 void initialisation_jeu() {
   //randomSeed(analogRead(0));
   deplacer(1, 0);  //permet d'afficher le canon
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < 9; i++) {//9
     for (int j = 0; j < 15; j++) {
       jeu[i][j] = random(1, nb_couleur);
     }
   }
+  //jeu[14][13]=2;
+
 
   /*jeu[0][10]=3;
   jeu[0][9]=2;
@@ -431,49 +433,189 @@ bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloqu
 
 
   } else if (incl_cube == 1) {
+    if(pos_cube_x==58){
+      ligne = (pos_cube_y - 1) / 3;
+      
+      if(pos_cube_y % 3 == 0 && ligne%2==0){
+        colonne = 14;
+
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne - 1] == 0);//les deux du dessus
+      }
+      else if(pos_cube_y % 3 == 0 && ligne%2==1){
+        colonne = 14;
+
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);//celle du dessus
+      }
+      else if(ligne%2==0 && pos_cube_y % 3==2){
+        colonne=14;
+        ligne--;
+        return false;
+      }
+      else{
+        return true;
+      }
+    }
+    else{
+
     //ligne = pos_cube_y / 3 - 1;
     if(pos_cube_y % 3 == 0){
     ligne = (pos_cube_y - 1) / 3;
     if (ligne % 2 == 0) {
-      Serial.println(pos_cube_x);
+      //Serial.println(pos_cube_x);
+      //Serial.println("pair");
       colonne = (pos_cube_x+2) / 4;
-      if(pos_cube_x+5){//TODO
-
-      }
-      if ((pos_cube_x + 1) % 4 == 1 || (pos_cube_x + 1) % 4 == 2) {  // si il est en 1 ou a gauche ou en face
+      
+      if (pos_cube_x == 57 || (pos_cube_x + 1) % 4 == 1 || (pos_cube_x + 1) % 4 == 2) {  // si il est a droite ou en face
         return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+
       } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne - 1] == 0);
-      } else {  //si il est a droite
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] == 0);
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      } else {  //si il est a gauche
+      
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] == 0 && jeu[ligne-1][(pos_cube_x+5)/4]==0);
       }
+
+      
 
 
     } else {
 
       //colonne = 15 - (61 - pos_cube_x) / 4;
-      colonne = (pos_cube_x - 1) / 4;
+      colonne = (pos_cube_x + 1) / 4;
       Serial.println(pos_cube_x);
-      if (pos_cube_x == 59 || (pos_cube_x + 1) % 4 == 2 || (pos_cube_x + 1) % 4 == 3) {  // si il est en 59 ou a droite ou en face
+      if (pos_cube_x == 57 || (pos_cube_x + 3) % 4 == 2 || (pos_cube_x + 3) % 4 == 1) {  // si il est en 57 ou a gauche ou en face
         return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
-      } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne + 1] == 0);
-      } else {  //si il est a gauche
+      } else if ((pos_cube_x + 3) % 4 == 0) {  //si il est entre deux cubes
+      
         return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] == 0);
+      } else {  //si il est a droite
+      Serial.println("la");
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] == 0 && jeu[ligne-1][(pos_cube_x+4)/4]==0);
       }
 
       //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
-    }}
+    }
+    }
+    else{//verifier juste a droite du cube
+      //Serial.println("test");
+      ligne = (pos_cube_y - 1) / 3;
+      //pos_cube_y % 3 == 0
+      if (pos_cube_y>3 && ligne % 2 == 0 && (pos_cube_x + 1) % 4 == 2) {//si il peut y avoir un cube a droite sur une ligne paire
+        Serial.println("1");
+        ligne--;
+        colonne = (pos_cube_x+2) / 4;
+        return jeu[ligne-1][(pos_cube_x+5)/4]==0;
+      }
+      else if (pos_cube_y>3 && ligne % 2 == 1 && (pos_cube_x +1) % 4 == 1){//si il peut y avoir un cube a droite sur une ligne impaire
+        //colonne--;//on descend le cube
+        ligne--;
+        colonne = (pos_cube_x + 1) / 4;
+        
+        return jeu[ligne-1][(pos_cube_x+4)/4]==0;
+      }
+      else{
+        return true;
+      }
+       
+
+    }
+  }
+  } else if (incl_cube == -1) {
+    
+    if(pos_cube_x==2){
+      ligne = (pos_cube_y - 1) / 3;
+      
+      if(pos_cube_y % 3 == 0 && ligne%2==1){
+        colonne = 0;
+
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0 && jeu[ligne - 1][colonne + 1] == 0);//les deux du dessus
+      }
+      else if(pos_cube_y % 3 == 0 && ligne%2==0){
+        colonne = 0;
+
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);//celle du dessus
+      }
+      else if(ligne%2==1 && pos_cube_y % 3==2){
+        colonne=0;
+        ligne--;
+        return false;
+      }
+      else{
+        return true;
+      }
+    }
     else{
+    
+    //ligne = pos_cube_y / 3 - 1;
+    if(pos_cube_y % 3 == 0){
+    ligne = (pos_cube_y - 1) / 3;
+    if (ligne % 2 == 0) {
+      //Serial.println(pos_cube_x);
+      //Serial.println("pair");
+      colonne = (pos_cube_x-2) / 4;
+      
+      if (pos_cube_x == 3 || (pos_cube_x -3) % 4 == 1 || (pos_cube_x -3) % 4 == 2) {  // si il est a droite ou en face
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+
+      } else if ((pos_cube_x -3) % 4 == 0) {  //si il est entre deux cubes
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] == 0);
+      } else {  //si il est a gauche
+      
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] == 0 && jeu[ligne-1][(pos_cube_x-3)/4]==0);
+      }
+
+      
+
+
+    } else {
+
+      //colonne = 15 - (61 - pos_cube_x) / 4;
+      colonne = (pos_cube_x -3) / 4;
+      Serial.println(pos_cube_x);
+      if (pos_cube_x == 3 || (pos_cube_x -1) % 4 == 2 || (pos_cube_x -1) % 4 == 1) {  // si il est en 3 ou a gauche ou en face
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      } else if ((pos_cube_x -1) % 4 == 0) {  //si il est entre deux cubes
+      
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      } else {  //si il est a droite
+      Serial.println("la");
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] == 0 && jeu[ligne-1][(pos_cube_x-4)/4]==0);
+      }
+
+      //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+    }
+    }
+    else{//verifier juste a gauche du cube
+      //Serial.println("test");
+      ligne = (pos_cube_y - 1) / 3;
+      //pos_cube_y % 3 == 0
+      if (pos_cube_y>3 && ligne % 2 == 0 && (pos_cube_x -3) % 4 == 1) {//si il peut y avoir un cube a gauche sur une ligne paire
+        Serial.println("1");
+        ligne--;
+        colonne = (pos_cube_x-2) / 4;
+        return jeu[ligne-1][(pos_cube_x-3)/4]==0;
+      }
+      else if (pos_cube_y>3 && ligne % 2 == 1 && (pos_cube_x -1) % 4 == 1){//si il peut y avoir un cube a gauche sur une ligne impaire
+        //colonne--;//on descend le cube
+        ligne--;
+        colonne = (pos_cube_x -2) / 4;
+        
+        return jeu[ligne-1][(pos_cube_x-4)/4]==0;
+      }
+      else{
+        return true;
+      }
+       
 
     }
 
-  } else if (incl_cube == -1) {
+
   }
 
-else {  //sinon
+}else {  //sinon
   return true;
 }
+Serial.println("fin");
 }
 
 void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
