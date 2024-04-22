@@ -27,24 +27,24 @@ uint8_t marge_g = 1;  //marge du jeu
 uint8_t marge_d = 2;  //marge du jeu
 uint8_t en_tete = 1;  //en_tete du jeu
 
-uint8_t nb_couleur = 7;       //affiche nb_couleur - 1 dans le jeu
-uint8_t nb_tirs = 4;          //nb de tirs avant que ca descende
+uint8_t nb_couleur = 7;                //affiche nb_couleur - 1 dans le jeu
+uint8_t nb_tirs = 4;                   //nb de tirs avant que ca descende
 volatile uint8_t numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
 volatile uint8_t taille_descente = 1;  //indique de combien on descent par descente
 
 volatile uint8_t pos = 30;  //position de la fleche d'envoi en x
-volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile int incl = 0;      //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
 volatile uint8_t ligne = 0;  //ligne et colonne du cube pour ajuster sa position
 volatile uint8_t colonne = 0;
 
-volatile uint8_t clignote = 0;//0=> eteint 1=> allume
+volatile uint8_t clignote = 0;  //0=> eteint 1=> allume
 
 volatile int score = 0;  // score
 
 volatile uint8_t pos_cube_x = 0;    //position de la boule en bas a gauche en x
 volatile uint8_t pos_cube_y = 0;    //position de la boule en bas a gauche en y
-volatile int incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile int incl_cube = 0;         //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile uint8_t couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
 volatile uint8_t res_x[255];
@@ -58,7 +58,8 @@ volatile uint8_t jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
 
 volatile bool deplacement = false;  //booleen pour indiquer si la boule est en deplacement
-volatile bool en_jeu=true;
+volatile bool pret = true;  //booleen pour indiquer si la boule est prete a etre deplacee
+volatile bool en_jeu = true;
 
 struct PaireInt {
   int fst;  //premier du couple, coordonnée en x
@@ -77,8 +78,8 @@ void setup() {
   //Timer3.initialize(75000);//defini l'intervalle
   Timer3.initialize(25000);  //definit l'intervalle un 0 en -
   Timer3.attachInterrupt(deplacer_cube);
-  Timer4.initialize(50000);  //clignote toutes les demi secondes
-  Timer4.attachInterrupt(clignote);
+  Timer4.initialize(500000);  //clignote toutes les demi secondes
+  Timer4.attachInterrupt(clignoter);
   //init_anim(); // animation de lancement du jeu
   //init_interface(); // initialise l'interface de jeu
   initialisation_jeu();
@@ -87,213 +88,287 @@ void setup() {
   //afficher_jeu();
 }
 
-void clignote(){
-  if (clignote!=0){
-    for(int i=0;i<taille;i++){
-      int a=0;
-    }
-  }
-}
+void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'explosent
+Serial.println(clignote);
+  if (clignote != 0) {
+    if(clignote<5){
 
-void set(uint8_t x, uint8_t y,bool b){
-  if(jeu[y][x]>=32 && !b){
-    jeu[y][x]=jeu[y][x]-32;
-  }
-  else if(jeu[y][x]<32 && b ){
-    jeu[y][x]=jeu[y][x]+32;
-  }
-}
-bool get(uint8_t x, uint8_t y){
-  return jeu[y][x]>=32;
-} 
+      for (int k = 0; k < taille; k++) {
+        int j = res_x[k];
+        int i = res_y[k];
 
-void init_anim() {
-  static int x_letter = (matrix.width() / 2) - 3;
-  static int y_letter = (matrix.height() / 2) - 3;
-
-  static int x;
-  static int y;
-  static int dx;
-  static int dy;
-
-  for (int i = 0; i < 2; i++) {    // répète la boucle d'animation, 2 fois
-    for (int k = 0; k < 3; k++) {  // les leds de la matrice s'allument toutes, 3 fois
-      matrix.fillRect(0, 0, matrix.width() - 1, matrix.height() - 1, matrix.Color888(255, 0, 0));
-      delay(50);
-      matrix.fillScreen(matrix.Color888(0, 0, 0));  // Efface l'écran
-    }
-
-    for (int j = 0; j < 2; j++) {  // allume les leds en faisant le contour de la matrice, 2 fois
-      x = 1;
-      y = 0;
-      dx = 1;
-      dy = 0;
-      matrix.drawChar(x_letter - (7 * 3), (matrix.height() / 2) - 8, 'B', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - (7 * 2), (matrix.height() / 2) - 8, 'u', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - 7, (matrix.height() / 2) - 8, 'b', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter, (matrix.height() / 2) - 8, 'b', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + 7, (matrix.height() / 2) - 8, 'l', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + (7 * 2), (matrix.height() / 2) - 8, 'e', matrix.Color888(255, 0, 0), 0, 1);
-
-      matrix.drawChar(x_letter - (7 * 3), (matrix.height() / 2), 'S', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - (7 * 2), (matrix.height() / 2), 'h', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - 7, (matrix.height() / 2), 'o', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter, (matrix.height() / 2), 'o', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + 7, (matrix.height() / 2), 't', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + (7 * 2), (matrix.height() / 2), 'e', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + (7 * 3), (matrix.height() / 2), 'r', matrix.Color888(255, 0, 0), 0, 1);
-
-      while (x != 0 || y != 0) {                           // animation pixel tournant
-        matrix.drawPixel(x, y, matrix.Color333(7, 7, 7));  // Allumer les pixels en blanc
-        x += dx;                                           // Mettre à jour les positions
-        y += dy;
-        if (x == 0 && y == 0) {  // Vérifier si la ligne a atteint un bord et changer de direction si nécessaire
-          dx = 1;
-          dy = 0;
-        } else if (x == matrix.width() - 1 && y == 0) {
-          dx = 0;
-          dy = 1;
-        } else if (x == matrix.width() - 1 && y == matrix.height() - 1) {
-          dx = -1;
-          dy = 0;
-        } else if (x == 0 && y == matrix.height() - 1) {
-          dx = 0;
-          dy = -1;
+        if (i % 2 == 0) {
+          matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]%32 * (1 - (clignote % 2))]);
+        } else {
+          matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]%32 * (1 - (clignote % 2))]);
         }
-        delay(3);  // Contrôle de la vitesse de l'animation
+
+
+        if (clignote == 3) {
+          if (jeu[i][j] >= 32) {
+            jeu[i][j] = 32;
+          } else {
+            jeu[i][j] = 0;
+          }
+        }
       }
-      matrix.fillScreen(matrix.Color888(0, 0, 0));
+      clignote++;
+    
+    if (clignote == 4) {
+      clignote=0;
+      boules_isolees();
     }
   }
-  initialisation_jeu();
+  else{
+    for (int i = 0; i < 17; i++) {
+      for (int j = 0; j < 15; j++) {
+        if (!get(j, i) && jeu[i][j] % 32 != 0) {  //ancien !visite[i][j]
+
+          if (i % 2 == 0) {
+            matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]%32 *(1-(clignote%2))]);
+          } else {
+            matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]%32 *(1-(clignote%2))]);
+          }
+          if(clignote==7){
+            if (jeu[i][j] >= 32) {
+            jeu[i][j] = 32;
+          } else {
+            jeu[i][j] = 0;
+          }
+          }
+        }
+      }
+    }
+    clignote++;
+    if(clignote==8){
+      couleur_cube = random(1, nb_couleur);//re-armer le canon
+        if (incl == 0) {
+          //pos_cube_x = pos;
+          //pos_cube_y = 63 - hauteur - 5;
+          matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube]);  //boule a envoyer
+        } else if (incl == -1) {
+          //pos_cube_x = pos - 5;
+          //pos_cube_y = 63 - hauteur - 5;
+          matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
+          matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
+          matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
+        } else if (incl == 1) {
+          //pos_cube_x = pos + 5;
+          //pos_cube_y = 63 - hauteur - 5;
+          matrix.drawLine(pos + 7, matrix.height() - 6 - hauteur, pos + 5, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
+          matrix.drawLine(pos + 8, matrix.height() - 7 - hauteur, pos + 6, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
+          matrix.drawLine(pos + 9, matrix.height() - 8 - hauteur, pos + 7, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
+        }
+
+      clignote=0;
+      //deplacement = false;
+      
+    if (numero_tir == nb_tirs) {
+      numero_tir = 0;
+      descendre();
+    }
+    pret=true;
+    }
+
+  }
+  }
 }
 
-void clignoter(){
-  int i=0;
-}
-
-void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
-
-
-  //bool valides[17][15];//normalement ici; visite doit etre remplacé par valides mais pour manque de place (bug de matrice), on reutilise visite qui est lui aussi un tableau de bool
-  //forward propagation; on prends le probleme à l'envers; on regarde toutes les billes accessibles depuis la ligne -1
-  for (int i = 0; i < 17; i++) {
-    for (int j = 0; j < 15; j++) {
-      //visite[i][j] = false; ancien
-      set(j,i,false);
+  void set(uint8_t x, uint8_t y, bool b) {
+    if (jeu[y][x] >= 32 && !b) {
+      jeu[y][x] = jeu[y][x] - 32;
+    } else if (jeu[y][x] < 32 && b) {
+      jeu[y][x] = jeu[y][x] + 32;
     }
   }
-
-  uint8_t file_x[255];
-  uint8_t file_y[255];
-
-  int debut = 0;  // la ou on defile
-  int fin = 0;    // la ou on enfile
-
-  for (int i = 0; i < 15; i++) {
-    if (jeu[0][i]%32 != 0) {
-      //visite[0][i] = true;ancien
-      set(i,0,true);
-      file_x[fin] = i;
-      file_y[fin] = 0;
-      fin++;
-    }
+  bool get(uint8_t x, uint8_t y) {
+    return jeu[y][x] >= 32;
   }
 
-  while (debut != fin) {
-    //Serial.println(fin);
-    int x = file_x[debut];
-    int y = file_y[debut];
-    debut++;
+  void init_anim() {
+    static int x_letter = (matrix.width() / 2) - 3;
+    static int y_letter = (matrix.height() / 2) - 3;
 
-    int depl;
-    if (y % 2 == 0) {
-      depl = -1;
-    } else {
-      depl = 1;
+    static int x;
+    static int y;
+    static int dx;
+    static int dy;
+
+    for (int i = 0; i < 2; i++) {    // répète la boucle d'animation, 2 fois
+      for (int k = 0; k < 3; k++) {  // les leds de la matrice s'allument toutes, 3 fois
+        matrix.fillRect(0, 0, matrix.width() - 1, matrix.height() - 1, matrix.Color888(255, 0, 0));
+        delay(50);
+        matrix.fillScreen(matrix.Color888(0, 0, 0));  // Efface l'écran
+      }
+
+      for (int j = 0; j < 2; j++) {  // allume les leds en faisant le contour de la matrice, 2 fois
+        x = 1;
+        y = 0;
+        dx = 1;
+        dy = 0;
+        matrix.drawChar(x_letter - (7 * 3), (matrix.height() / 2) - 8, 'B', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter - (7 * 2), (matrix.height() / 2) - 8, 'u', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter - 7, (matrix.height() / 2) - 8, 'b', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter, (matrix.height() / 2) - 8, 'b', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter + 7, (matrix.height() / 2) - 8, 'l', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter + (7 * 2), (matrix.height() / 2) - 8, 'e', matrix.Color888(255, 0, 0), 0, 1);
+
+        matrix.drawChar(x_letter - (7 * 3), (matrix.height() / 2), 'S', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter - (7 * 2), (matrix.height() / 2), 'h', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter - 7, (matrix.height() / 2), 'o', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter, (matrix.height() / 2), 'o', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter + 7, (matrix.height() / 2), 't', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter + (7 * 2), (matrix.height() / 2), 'e', matrix.Color888(255, 0, 0), 0, 1);
+        matrix.drawChar(x_letter + (7 * 3), (matrix.height() / 2), 'r', matrix.Color888(255, 0, 0), 0, 1);
+
+        while (x != 0 || y != 0) {                           // animation pixel tournant
+          matrix.drawPixel(x, y, matrix.Color333(7, 7, 7));  // Allumer les pixels en blanc
+          x += dx;                                           // Mettre à jour les positions
+          y += dy;
+          if (x == 0 && y == 0) {  // Vérifier si la ligne a atteint un bord et changer de direction si nécessaire
+            dx = 1;
+            dy = 0;
+          } else if (x == matrix.width() - 1 && y == 0) {
+            dx = 0;
+            dy = 1;
+          } else if (x == matrix.width() - 1 && y == matrix.height() - 1) {
+            dx = -1;
+            dy = 0;
+          } else if (x == 0 && y == matrix.height() - 1) {
+            dx = 0;
+            dy = -1;
+          }
+          delay(3);  // Contrôle de la vitesse de l'animation
+        }
+        matrix.fillScreen(matrix.Color888(0, 0, 0));
+      }
+    }
+    initialisation_jeu();
+  }
+
+
+  void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
+
+
+    //bool valides[17][15];//normalement ici; visite doit etre remplacé par valides mais pour manque de place (bug de matrice), on reutilise visite qui est lui aussi un tableau de bool
+    //forward propagation; on prends le probleme à l'envers; on regarde toutes les billes accessibles depuis la ligne -1
+    for (int i = 0; i < 17; i++) {
+      for (int j = 0; j < 15; j++) {
+        //visite[i][j] = false; ancien
+        set(j, i, false);
+      }
     }
 
-    int voisins_x[6];
-    int voisins_y[6];
+    uint8_t file_x[255];
+    uint8_t file_y[255];
 
-    voisins_x[0] = x;
-    voisins_y[0] = y - 1;
+    int debut = 0;  // la ou on defile
+    int fin = 0;    // la ou on enfile
 
-    //voisins[1].fst = x + depl;
-    //voisins[1].snd = y - 1;
-    voisins_x[1] = x + depl;
-    voisins_y[1] = y - 1;
-
-    //voisins[2].fst = x + 1;
-    //voisins[2].snd = y;
-    voisins_x[2] = x + 1;
-    voisins_y[2] = y;
-
-    //voisins[3].fst = x - 1;
-    //voisins[3].snd = y;
-    voisins_x[3] = x - 1;
-    voisins_y[3] = y;
-
-    //voisins[4].fst = x;
-    //voisins[4].snd = y + 1;
-    voisins_x[4] = x;
-    voisins_y[4] = y + 1;
-
-    //voisins[5].fst = x + depl;
-    //voisins[5].snd = y + 1;
-    voisins_x[5] = x + depl;
-    voisins_y[5] = y + 1;
-
-    for (int i = 0; i < 6; i++) {
-      //PaireInt w = voisins[i];
-      //int x = w.fst;
-      //int y = w.snd;
-      int x = voisins_x[i];
-      int y = voisins_y[i];
-      //Serial.print("x: ");
-      //Serial.println(x);
-      //Serial.print("y: ");
-      //Serial.println(y);
-
-      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !get(x,y) && jeu[y][x]%32 != 0) {  //&& fin != taille_listes  (ancien !visite[y][x])
-        //ajouter w dans file attente
-        //visite[y][x] = true;ancien
-        set(x,y,true);
-        //file[fin].fst=x;
-        //file[fin].snd=y;
-        file_x[fin] = x;
-        file_y[fin] = y;
+    for (int i = 0; i < 15; i++) {
+      if (jeu[0][i] % 32 != 0) {
+        //visite[0][i] = true;ancien
+        set(i, 0, true);
+        file_x[fin] = i;
+        file_y[fin] = 0;
         fin++;
       }
     }
-  }
-  for (int i = 0; i < 17; i++) {
-    for (int j = 0; j < 15; j++) {
-      if (!get(j,i) && jeu[i][j]%32 != 0) {//ancien !visite[i][j]
-        if(jeu[i][j]>=32){
-          jeu[i][j] = 32;
-        }
-        else{
-          jeu[i][j] = 0;
-        }
-        
-        if (i % 2 == 0) {
-          matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
-        } else {
-          matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
+
+    while (debut != fin) {
+      //Serial.println(fin);
+      int x = file_x[debut];
+      int y = file_y[debut];
+      debut++;
+
+      int depl;
+      if (y % 2 == 0) {
+        depl = -1;
+      } else {
+        depl = 1;
+      }
+
+      int voisins_x[6];
+      int voisins_y[6];
+
+      voisins_x[0] = x;
+      voisins_y[0] = y - 1;
+
+      //voisins[1].fst = x + depl;
+      //voisins[1].snd = y - 1;
+      voisins_x[1] = x + depl;
+      voisins_y[1] = y - 1;
+
+      //voisins[2].fst = x + 1;
+      //voisins[2].snd = y;
+      voisins_x[2] = x + 1;
+      voisins_y[2] = y;
+
+      //voisins[3].fst = x - 1;
+      //voisins[3].snd = y;
+      voisins_x[3] = x - 1;
+      voisins_y[3] = y;
+
+      //voisins[4].fst = x;
+      //voisins[4].snd = y + 1;
+      voisins_x[4] = x;
+      voisins_y[4] = y + 1;
+
+      //voisins[5].fst = x + depl;
+      //voisins[5].snd = y + 1;
+      voisins_x[5] = x + depl;
+      voisins_y[5] = y + 1;
+
+      for (int i = 0; i < 6; i++) {
+        //PaireInt w = voisins[i];
+        //int x = w.fst;
+        //int y = w.snd;
+        int x = voisins_x[i];
+        int y = voisins_y[i];
+        //Serial.print("x: ");
+        //Serial.println(x);
+        //Serial.print("y: ");
+        //Serial.println(y);
+
+        if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !get(x, y) && jeu[y][x] % 32 != 0) {  //&& fin != taille_listes  (ancien !visite[y][x])
+          //ajouter w dans file attente
+          //visite[y][x] = true;ancien
+          set(x, y, true);
+          //file[fin].fst=x;
+          //file[fin].snd=y;
+          file_x[fin] = x;
+          file_y[fin] = y;
+          fin++;
         }
       }
     }
-  }
-  if (numero_tir == nb_tirs) {
-    numero_tir = 0;
-    descendre();
-  }
+    clignote=5;
+    /*for (int i = 0; i < 17; i++) {
+      for (int j = 0; j < 15; j++) {
+        if (!get(j, i) && jeu[i][j] % 32 != 0) {  //ancien !visite[i][j]
+          if (jeu[i][j] >= 32) {
+            jeu[i][j] = 32;
+          } else {
+            jeu[i][j] = 0;
+          }
+
+          if (i % 2 == 0) {
+            matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
+          } else {
+            matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
+          }
+        }
+      }
+    }
+    if (numero_tir == nb_tirs) {
+      numero_tir = 0;
+      descendre();
+    }*/
 
 
 
 
-  /*
+    /*
   for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
       if (i == 0) {
@@ -328,12 +403,12 @@ void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille es
       }
     }
   }*/
-}
+  }
 
-void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle ligne
-  bool verif = true;  //verifie si une bille fait perdre le joueur
+  void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle ligne
+    bool verif = true;  //verifie si une bille fait perdre le joueur
 
-  /*for (int i = 17 - taille_descente; i < 17; i++) {  //a remplacer par un while pour la complexité
+    /*for (int i = 17 - taille_descente; i < 17; i++) {  //a remplacer par un while pour la complexité
     for (int j = 0; j < 15; j++) {
       if (jeu[i][j] != 0) {
         verif = false;
@@ -341,7 +416,7 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
     }
   }*/
 
-  //if (verif) {
+    //if (verif) {
 
     /*for (int i = 0; i <15; i++) {
       if(jeu[17 - taille_descente][i]%32!=0){
@@ -352,29 +427,25 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
     for (int i = 16; i >= 0; i--) {
       for (int j = 14; j >= 0; j--) {
         if (i < taille_descente) {
-          if(jeu[i][j]>=32){
-            jeu[i][j] = 32+random(1, nb_couleur);
-          }
-          else{
-          jeu[i][j] = random(1, nb_couleur);
+          if (jeu[i][j] >= 32) {
+            jeu[i][j] = 32 + random(1, nb_couleur);
+          } else {
+            jeu[i][j] = random(1, nb_couleur);
           }
         } else {
-          if(i==17){
-            if(jeu[i - taille_descente][j]%32!=0){
-            verif=false;
-            matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i - taille_descente][j]%32]);
+          if (i == 17) {
+            if (jeu[i - taille_descente][j] % 32 != 0) {
+              verif = false;
+              matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i - taille_descente][j] % 32]);
             }
+          } else {
+            if (jeu[i][j] >= 32) {
+              jeu[i][j] = 32 + jeu[i - taille_descente][j] % 32;
+            } else {
+              jeu[i][j] = jeu[i - taille_descente][j] % 32;
+            }
+            //Serial.println(i==17 && jeu[i - taille_descente][j]!=0);
           }
-          else{
-            if(jeu[i][j]>=32){
-              jeu[i][j] = 32+jeu[i - taille_descente][j]%32;
-            }
-            else{
-              jeu[i][j] = jeu[i - taille_descente][j]%32;
-            }
-          //Serial.println(i==17 && jeu[i - taille_descente][j]!=0);
-          }
-          
         }
       }
     }
@@ -382,67 +453,67 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
     boules_isolees();
 
 
-    if(!verif){
-      en_jeu=false;
+    if (!verif) {
+      en_jeu = false;
       perdu();
     }
-//interrupts();
+    //interrupts();
 
 
-  //} else {
-  //  en_jeu=false;
-  //  perdu();
-  //}
-}
+    //} else {
+    //  en_jeu=false;
+    //  perdu();
+    //}
+  }
 
-void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
-  Serial.println("LE NUL IL A PERDU");
-  //a completer
-}
+  void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
+    Serial.println("LE NUL IL A PERDU");
+    //a completer
+  }
 
-void init_interface() {
-  matrix.drawRect(0, 0, matrix.width(), matrix.height(), matrix.Color333(7, 7, 0));
-  matrix.drawLine(8, matrix.height() - 11, matrix.width() - 1, matrix.height() - 11, matrix.Color333(7, 7, 0));
-  matrix.drawLine(8, 0, 8, matrix.height() - 11, matrix.Color333(7, 7, 0));
+  void init_interface() {
+    matrix.drawRect(0, 0, matrix.width(), matrix.height(), matrix.Color333(7, 7, 0));
+    matrix.drawLine(8, matrix.height() - 11, matrix.width() - 1, matrix.height() - 11, matrix.Color333(7, 7, 0));
+    matrix.drawLine(8, 0, 8, matrix.height() - 11, matrix.Color333(7, 7, 0));
 
-  // score
-  score = 0;
-  /*std::string t = to_string(score);
+    // score
+    score = 0;
+    /*std::string t = to_string(score);
   char const *n_char = t.c_str();
   Serial.println(n_char[0]);*/
-  matrix.drawChar(matrix.width() - 21, matrix.height() - 9, '7', matrix.Color333(255, 0, 0), 0, 1);
-  matrix.drawChar(matrix.width() - 14, matrix.height() - 9, '9', matrix.Color333(255, 0, 0), 0, 1);
-  matrix.drawChar(matrix.width() - 7, matrix.height() - 9, '1', matrix.Color333(255, 0, 0), 0, 1);
-}
+    matrix.drawChar(matrix.width() - 21, matrix.height() - 9, '7', matrix.Color333(255, 0, 0), 0, 1);
+    matrix.drawChar(matrix.width() - 14, matrix.height() - 9, '9', matrix.Color333(255, 0, 0), 0, 1);
+    matrix.drawChar(matrix.width() - 7, matrix.height() - 9, '1', matrix.Color333(255, 0, 0), 0, 1);
+  }
 
 
 
-void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
+  void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 
-  for (int i = 0; i < 17; i++) {
-    for (int j = 0; j < 15; j++) {
+    for (int i = 0; i < 17; i++) {
+      for (int j = 0; j < 15; j++) {
 
-      if (i % 2 == 0) {
-        matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]%32]);
-      } else {
-        matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j]%32]);
+        if (i % 2 == 0) {
+          matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j] % 32]);
+        } else {
+          matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i][j] % 32]);
+        }
       }
     }
   }
-}
 
-void initialisation_jeu() {
-  //randomSeed(analogRead(0));
-  deplacer(1, 0);  //permet d'afficher le canon
-  for (int i = 0; i < 9; i++) {//9
-    for (int j = 0; j < 15; j++) {
-      jeu[i][j] = random(1, nb_couleur);
+  void initialisation_jeu() {
+    //randomSeed(analogRead(0));
+    deplacer(1, 0);                //permet d'afficher le canon
+    for (int i = 0; i < 9; i++) {  //9
+      for (int j = 0; j < 15; j++) {
+        jeu[i][j] = random(1, nb_couleur);
+      }
     }
-  }
-  //jeu[14][13]=2;
+    //jeu[14][13]=2;
 
 
-  /*jeu[0][10]=3;
+    /*jeu[0][10]=3;
   jeu[0][9]=2;
   jeu[1][10]=1;
   jeu[2][10]=4;
@@ -451,378 +522,358 @@ void initialisation_jeu() {
   jeu[3][8]=4;
   jeu[2][8]=3;*/
 
-  afficher_jeu();
-}
-
-bool estPossible(int a, int b) {  //a=dir b=incl => verifier si le deplacement est possible(ne pas sortir de la zone de jeu)
-
-  if (incl + b == 0) {
-    return ((pos + a) < (62 - marge_d) && (pos + a) >= marge_g);
-  } else if (incl + b == 1) {
-    return ((pos + a + 6) < (61 - marge_d) && (pos + a) >= marge_g);
-  } else if (incl + b == -1) {
-    return ((pos + a) < (62 - marge_d) && (pos + a - 7) >= marge_g);
-  } else {
-    return false;
+    afficher_jeu();
   }
-}
 
-bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloquer
-  if (pos_cube_y > 54) {
-    return true;
-  } else if (incl_cube == 0 && pos_cube_y % 3 == 0) {  //si la prochaine case peut être un cube ou le bord
+  bool estPossible(int a, int b) {  //a=dir b=incl => verifier si le deplacement est possible(ne pas sortir de la zone de jeu)
 
-
-    //ligne = pos_cube_y / 3 - 1;
-    ligne = (pos_cube_y - 1) / 3;
-    if (ligne % 2 == 0) {
-      Serial.println(pos_cube_x);
-      colonne = pos_cube_x / 4;
-
-      if (pos_cube_x == 1 || (pos_cube_x - 1) % 4 == 1 || (pos_cube_x - 1) % 4 == 2) {  // si il est en 1 ou a gauche ou en face
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-      } else if ((pos_cube_x - 1) % 4 == 0) {  //si il est entre deux cubes
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0 && jeu[ligne - 1][colonne - 1]%32 == 0);
-      } else {  //si il est a droite
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1]%32 == 0);
-      }
-
-
+    if (incl + b == 0) {
+      return ((pos + a) < (62 - marge_d) && (pos + a) >= marge_g);
+    } else if (incl + b == 1) {
+      return ((pos + a + 6) < (61 - marge_d) && (pos + a) >= marge_g);
+    } else if (incl + b == -1) {
+      return ((pos + a) < (62 - marge_d) && (pos + a - 7) >= marge_g);
     } else {
-
-      //colonne = 15 - (61 - pos_cube_x) / 4;
-      colonne = (pos_cube_x - 1) / 4;
-      Serial.println(pos_cube_x);
-      if (pos_cube_x == 59 || (pos_cube_x + 1) % 4 == 2 || (pos_cube_x + 1) % 4 == 3) {  // si il est en 59 ou a droite ou en face
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-      } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0 && jeu[ligne - 1][colonne + 1]%32 == 0);
-      } else {  //si il est a gauche
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1]%32 == 0);
-      }
-
-      //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      return false;
     }
+  }
 
-    //Serial.println(pos_cube_y);
-    //Serial.println(ligne);
-    //Serial.println(colonne);
-    //Serial.println(jeu[ligne-1][colonne+1]);
-    //Serial.println(bool((pos_cube_y > 2 + en_tete) && jeu[ligne-1][colonne]==0));
+  bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloquer
+    if (pos_cube_y > 54) {
+      return true;
+    } else if (incl_cube == 0 && pos_cube_y % 3 == 0) {  //si la prochaine case peut être un cube ou le bord
 
 
-  } else if (incl_cube == 1) {
-    if(pos_cube_x==58){
+      //ligne = pos_cube_y / 3 - 1;
       ligne = (pos_cube_y - 1) / 3;
-      
-      if(pos_cube_y % 3 == 0 && ligne%2==0){
-        colonne = 14;
+      if (ligne % 2 == 0) {
+        Serial.println(pos_cube_x);
+        colonne = pos_cube_x / 4;
 
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0 && jeu[ligne - 1][colonne - 1]%32 == 0);//les deux du dessus
-      }
-      else if(pos_cube_y % 3 == 0 && ligne%2==1){
-        colonne = 14;
+        if (pos_cube_x == 1 || (pos_cube_x - 1) % 4 == 1 || (pos_cube_x - 1) % 4 == 2) {  // si il est en 1 ou a gauche ou en face
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+        } else if ((pos_cube_x - 1) % 4 == 0) {  //si il est entre deux cubes
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne - 1] % 32 == 0);
+        } else {  //si il est a droite
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] % 32 == 0);
+        }
 
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);//celle du dessus
+
+      } else {
+
+        //colonne = 15 - (61 - pos_cube_x) / 4;
+        colonne = (pos_cube_x - 1) / 4;
+        Serial.println(pos_cube_x);
+        if (pos_cube_x == 59 || (pos_cube_x + 1) % 4 == 2 || (pos_cube_x + 1) % 4 == 3) {  // si il est en 59 ou a droite ou en face
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+        } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne + 1] % 32 == 0);
+        } else {  //si il est a gauche
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] % 32 == 0);
+        }
+
+        //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
       }
-      else if(ligne%2==0 && pos_cube_y % 3==2){
-        colonne=14;
-        ligne--;
-        return false;
+
+      //Serial.println(pos_cube_y);
+      //Serial.println(ligne);
+      //Serial.println(colonne);
+      //Serial.println(jeu[ligne-1][colonne+1]);
+      //Serial.println(bool((pos_cube_y > 2 + en_tete) && jeu[ligne-1][colonne]==0));
+
+
+    } else if (incl_cube == 1) {
+      if (pos_cube_x == 58) {
+        ligne = (pos_cube_y - 1) / 3;
+
+        if (pos_cube_y % 3 == 0 && ligne % 2 == 0) {
+          colonne = 14;
+
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne - 1] % 32 == 0);  //les deux du dessus
+        } else if (pos_cube_y % 3 == 0 && ligne % 2 == 1) {
+          colonne = 14;
+
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);  //celle du dessus
+        } else if (ligne % 2 == 0 && pos_cube_y % 3 == 2) {
+          colonne = 14;
+          ligne--;
+          return false;
+        } else {
+          return true;
+        }
+      } else {
+
+        //ligne = pos_cube_y / 3 - 1;
+        if (pos_cube_y % 3 == 0) {
+          ligne = (pos_cube_y - 1) / 3;
+          if (ligne % 2 == 0) {
+            //Serial.println(pos_cube_x);
+            //Serial.println("pair");
+            colonne = (pos_cube_x + 2) / 4;
+
+            if (pos_cube_x == 57 || (pos_cube_x + 1) % 4 == 1 || (pos_cube_x + 1) % 4 == 2) {  // si il est a droite ou en face
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+
+            } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+            } else {  //si il est a gauche
+
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] % 32 == 0 && jeu[ligne - 1][(pos_cube_x + 5) / 4] % 32 == 0);
+            }
+
+
+
+
+          } else {
+
+            //colonne = 15 - (61 - pos_cube_x) / 4;
+            colonne = (pos_cube_x + 1) / 4;
+            Serial.println(pos_cube_x);
+            if (pos_cube_x == 57 || (pos_cube_x + 3) % 4 == 2 || (pos_cube_x + 3) % 4 == 1) {  // si il est en 57 ou a gauche ou en face
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+            } else if ((pos_cube_x + 3) % 4 == 0) {  //si il est entre deux cubes
+
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] % 32 == 0);
+            } else {  //si il est a droite
+              Serial.println("la");
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] % 32 == 0 && jeu[ligne - 1][(pos_cube_x + 4) / 4] % 32 == 0);
+            }
+
+            //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+          }
+        } else {  //verifier juste a droite du cube
+          //Serial.println("test");
+          ligne = (pos_cube_y - 1) / 3;
+          //pos_cube_y % 3 == 0
+          if (pos_cube_y > 3 && ligne % 2 == 0 && (pos_cube_x + 1) % 4 == 2) {  //si il peut y avoir un cube a droite sur une ligne paire
+            Serial.println("1");
+            ligne--;
+            colonne = (pos_cube_x + 2) / 4;
+            return jeu[ligne - 1][(pos_cube_x + 5) / 4] % 32 == 0;
+          } else if (pos_cube_y > 3 && ligne % 2 == 1 && (pos_cube_x + 1) % 4 == 1) {  //si il peut y avoir un cube a droite sur une ligne impaire
+            //colonne--;//on descend le cube
+            ligne--;
+            colonne = (pos_cube_x + 1) / 4;
+
+            return jeu[ligne - 1][(pos_cube_x + 4) / 4] % 32 == 0;
+          } else {
+            return true;
+          }
+        }
       }
-      else{
-        return true;
+    } else if (incl_cube == -1) {
+
+      if (pos_cube_x == 2) {
+        ligne = (pos_cube_y - 1) / 3;
+
+        if (pos_cube_y % 3 == 0 && ligne % 2 == 1) {
+          colonne = 0;
+
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne + 1] % 32 == 0);  //les deux du dessus
+        } else if (pos_cube_y % 3 == 0 && ligne % 2 == 0) {
+          colonne = 0;
+
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);  //celle du dessus
+        } else if (ligne % 2 == 1 && pos_cube_y % 3 == 2) {
+          colonne = 0;
+          ligne--;
+          return false;
+        } else {
+          return true;
+        }
+      } else {
+
+        //ligne = pos_cube_y / 3 - 1;
+        if (pos_cube_y % 3 == 0) {
+          ligne = (pos_cube_y - 1) / 3;
+          if (ligne % 2 == 0) {
+            //Serial.println(pos_cube_x);
+            //Serial.println("pair");
+            colonne = (pos_cube_x - 2) / 4;
+
+            if (pos_cube_x == 3 || (pos_cube_x - 3) % 4 == 1 || (pos_cube_x - 3) % 4 == 2) {  // si il est a droite ou en face
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+
+            } else if ((pos_cube_x - 3) % 4 == 0) {  //si il est entre deux cubes
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] % 32 == 0);
+            } else {  //si il est a gauche
+
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] % 32 == 0 && jeu[ligne - 1][(pos_cube_x - 3) / 4] % 32 == 0);
+            }
+
+
+
+
+          } else {
+
+            //colonne = 15 - (61 - pos_cube_x) / 4;
+            colonne = (pos_cube_x - 3) / 4;
+            Serial.println(pos_cube_x);
+            if (pos_cube_x == 3 || (pos_cube_x - 1) % 4 == 2 || (pos_cube_x - 1) % 4 == 1) {  // si il est en 3 ou a gauche ou en face
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+            } else if ((pos_cube_x - 1) % 4 == 0) {  //si il est entre deux cubes
+
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+            } else {  //si il est a droite
+              Serial.println("la");
+              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] % 32 == 0 && jeu[ligne - 1][(pos_cube_x - 4) / 4] % 32 == 0);
+            }
+
+            //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+          }
+        } else {  //verifier juste a gauche du cube
+          //Serial.println("test");
+          ligne = (pos_cube_y - 1) / 3;
+          //pos_cube_y % 3 == 0
+          if (pos_cube_y > 3 && ligne % 2 == 0 && (pos_cube_x - 3) % 4 == 1) {  //si il peut y avoir un cube a gauche sur une ligne paire
+            Serial.println("1");
+            ligne--;
+            colonne = (pos_cube_x - 2) / 4;
+            return jeu[ligne - 1][(pos_cube_x - 3) / 4] % 32 == 0;
+          } else if (pos_cube_y > 3 && ligne % 2 == 1 && (pos_cube_x - 1) % 4 == 1) {  //si il peut y avoir un cube a gauche sur une ligne impaire
+            //colonne--;//on descend le cube
+            ligne--;
+            colonne = (pos_cube_x - 2) / 4;
+
+            return jeu[ligne - 1][(pos_cube_x - 4) / 4] % 32 == 0;
+          } else {
+            return true;
+          }
+        }
       }
+
+    } else {  //sinon
+      return true;
     }
-    else{
-
-    //ligne = pos_cube_y / 3 - 1;
-    if(pos_cube_y % 3 == 0){
-    ligne = (pos_cube_y - 1) / 3;
-    if (ligne % 2 == 0) {
-      //Serial.println(pos_cube_x);
-      //Serial.println("pair");
-      colonne = (pos_cube_x+2) / 4;
-      
-      if (pos_cube_x == 57 || (pos_cube_x + 1) % 4 == 1 || (pos_cube_x + 1) % 4 == 2) {  // si il est a droite ou en face
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-
-      } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-      } else {  //si il est a gauche
-      
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1]%32 == 0 && jeu[ligne-1][(pos_cube_x+5)/4]%32==0);
-      }
-
-      
-
-
-    } else {
-
-      //colonne = 15 - (61 - pos_cube_x) / 4;
-      colonne = (pos_cube_x + 1) / 4;
-      Serial.println(pos_cube_x);
-      if (pos_cube_x == 57 || (pos_cube_x + 3) % 4 == 2 || (pos_cube_x + 3) % 4 == 1) {  // si il est en 57 ou a gauche ou en face
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-      } else if ((pos_cube_x + 3) % 4 == 0) {  //si il est entre deux cubes
-      
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1]%32 == 0);
-      } else {  //si il est a droite
-      Serial.println("la");
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1]%32 == 0 && jeu[ligne-1][(pos_cube_x+4)/4]%32==0);
-      }
-
-      //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
-    }
-    }
-    else{//verifier juste a droite du cube
-      //Serial.println("test");
-      ligne = (pos_cube_y - 1) / 3;
-      //pos_cube_y % 3 == 0
-      if (pos_cube_y>3 && ligne % 2 == 0 && (pos_cube_x + 1) % 4 == 2) {//si il peut y avoir un cube a droite sur une ligne paire
-        Serial.println("1");
-        ligne--;
-        colonne = (pos_cube_x+2) / 4;
-        return jeu[ligne-1][(pos_cube_x+5)/4]%32==0;
-      }
-      else if (pos_cube_y>3 && ligne % 2 == 1 && (pos_cube_x +1) % 4 == 1){//si il peut y avoir un cube a droite sur une ligne impaire
-        //colonne--;//on descend le cube
-        ligne--;
-        colonne = (pos_cube_x + 1) / 4;
-        
-        return jeu[ligne-1][(pos_cube_x+4)/4]%32==0;
-      }
-      else{
-        return true;
-      }
-       
-
-    }
-  }
-  } else if (incl_cube == -1) {
-    
-    if(pos_cube_x==2){
-      ligne = (pos_cube_y - 1) / 3;
-      
-      if(pos_cube_y % 3 == 0 && ligne%2==1){
-        colonne = 0;
-
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0 && jeu[ligne - 1][colonne + 1]%32 == 0);//les deux du dessus
-      }
-      else if(pos_cube_y % 3 == 0 && ligne%2==0){
-        colonne = 0;
-
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);//celle du dessus
-      }
-      else if(ligne%2==1 && pos_cube_y % 3==2){
-        colonne=0;
-        ligne--;
-        return false;
-      }
-      else{
-        return true;
-      }
-    }
-    else{
-    
-    //ligne = pos_cube_y / 3 - 1;
-    if(pos_cube_y % 3 == 0){
-    ligne = (pos_cube_y - 1) / 3;
-    if (ligne % 2 == 0) {
-      //Serial.println(pos_cube_x);
-      //Serial.println("pair");
-      colonne = (pos_cube_x-2) / 4;
-      
-      if (pos_cube_x == 3 || (pos_cube_x -3) % 4 == 1 || (pos_cube_x -3) % 4 == 2) {  // si il est a droite ou en face
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-
-      } else if ((pos_cube_x -3) % 4 == 0) {  //si il est entre deux cubes
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1]%32 == 0);
-      } else {  //si il est a gauche
-      
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1]%32 == 0 && jeu[ligne-1][(pos_cube_x-3)/4]%32==0);
-      }
-
-      
-
-
-    } else {
-
-      //colonne = 15 - (61 - pos_cube_x) / 4;
-      colonne = (pos_cube_x -3) / 4;
-      Serial.println(pos_cube_x);
-      if (pos_cube_x == 3 || (pos_cube_x -1) % 4 == 2 || (pos_cube_x -1) % 4 == 1) {  // si il est en 3 ou a gauche ou en face
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-      } else if ((pos_cube_x -1) % 4 == 0) {  //si il est entre deux cubes
-      
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne]%32 == 0);
-      } else {  //si il est a droite
-      Serial.println("la");
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1]%32 == 0 && jeu[ligne-1][(pos_cube_x-4)/4]%32==0);
-      }
-
-      //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
-    }
-    }
-    else{//verifier juste a gauche du cube
-      //Serial.println("test");
-      ligne = (pos_cube_y - 1) / 3;
-      //pos_cube_y % 3 == 0
-      if (pos_cube_y>3 && ligne % 2 == 0 && (pos_cube_x -3) % 4 == 1) {//si il peut y avoir un cube a gauche sur une ligne paire
-        Serial.println("1");
-        ligne--;
-        colonne = (pos_cube_x-2) / 4;
-        return jeu[ligne-1][(pos_cube_x-3)/4]%32==0;
-      }
-      else if (pos_cube_y>3 && ligne % 2 == 1 && (pos_cube_x -1) % 4 == 1){//si il peut y avoir un cube a gauche sur une ligne impaire
-        //colonne--;//on descend le cube
-        ligne--;
-        colonne = (pos_cube_x -2) / 4;
-        
-        return jeu[ligne-1][(pos_cube_x-4)/4]%32==0;
-      }
-      else{
-        return true;
-      }
-       
-
-    }
-
-
-  }
-
-}else {  //sinon
-  return true;
-}
-Serial.println("fin");
-}
-
-void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
-  
-  for (int i = 0; i < taille; i++) {
-    res_x[i]=0;
-    res_y[i]=0;
-  }
-
-
-  for (int i = 0; i < 17; i++) {
-    for (int j = 0; j < 15; j++) {
-      //visite[i][j] = false;ancien
-      set(j,i,false);
-    }
-  }
-  int taille_listes = 255;  //apparemment la limte sinon bug de matrice
-  //PaireInt res[taille_listes];
-  //uint8_t res_x[taille_listes];
-  //uint8_t res_y[taille_listes];
-  //int taille = 0;  //taille du paquet de retour
-  taille=0;
-  //PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
-  uint8_t file_x[taille_listes];
-  uint8_t file_y[taille_listes];
-  int debut = 0;  //la ou on defile
-  int fin = 1;    //la ou on enfile
-
-  //visite[lig][col] = true;  //on visite la boule ancien
-  set(col,lig,true);
-
-  //file[0].fst = col;
-  //file[0].snd = lig;
-
-  file_x[0] = col;
-  file_y[0] = lig;
-
-  while (debut != fin) {
-    //PaireInt z = file[debut];  //on defile dans a
-    //int x = z.fst;
-    //int y = z.snd;
-    int x = file_x[debut];
-    int y = file_y[debut];
-
-    debut = debut + 1;
-
-
-
-
-    //res[taille] = z;  //on ajoute a au retour
-    res_x[taille] = x;
-    res_y[taille] = y;
-    taille++;
-    //Serial.println(taille);
-
-
-    //on calcule tous les voisins de a
-
-    //PaireInt voisins[6];
-    uint8_t voisins_x[6];
-    uint8_t voisins_y[6];
-    int depl;
-    if (y % 2 == 0) {
-      depl = -1;
-    } else {
-      depl = 1;
-    }
-    //voisins[0].fst = x;
-    //voisins[0].snd = y - 1;
-    voisins_x[0] = x;
-    voisins_y[0] = y - 1;
-
-    //voisins[1].fst = x + depl;
-    //voisins[1].snd = y - 1;
-    voisins_x[1] = x + depl;
-    voisins_y[1] = y - 1;
-
-    //voisins[2].fst = x + 1;
-    //voisins[2].snd = y;
-    voisins_x[2] = x + 1;
-    voisins_y[2] = y;
-
-    //voisins[3].fst = x - 1;
-    //voisins[3].snd = y;
-    voisins_x[3] = x - 1;
-    voisins_y[3] = y;
-
-    //voisins[4].fst = x;
-    //voisins[4].snd = y + 1;
-    voisins_x[4] = x;
-    voisins_y[4] = y + 1;
-
-    //voisins[5].fst = x + depl;
-    //voisins[5].snd = y + 1;
-    voisins_x[5] = x + depl;
-    voisins_y[5] = y + 1;
-
-
-
-    //on visite tous les voisins de a possibles
-
-    for (int i = 0; i < 6; i++) {
-      //PaireInt w = voisins[i];
-      //int x = w.fst;
-      //int y = w.snd;
-      int x = voisins_x[i];
-      int y = voisins_y[i];
-      //Serial.print("x: ");
-      //Serial.println(x);
-      //Serial.print("y: ");
-      //Serial.println(y);
-
-      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !get(x,y) && jeu[y][x]%32 == coul && fin != taille_listes) {//ancien !visite[y][x]
-        //ajouter w dans file attente
-        //visite[y][x] = true;ancien
-        set(x,y,true);
-        //file[fin].fst=x;
-        //file[fin].snd=y;
-        file_x[fin] = x;
-        file_y[fin] = y;
-        fin++;
-      }
-    }
+    Serial.println("fin2");
   }
 
-  if (taille > 2) {
-    //for(int h=0 ; h<3; h++){
-    for (int k = 0; k < taille; k++) {
+  void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
+
+    for (int i = 0; i < taille; i++) {
+      res_x[i] = 0;
+      res_y[i] = 0;
+    }
+
+
+    for (int i = 0; i < 17; i++) {
+      for (int j = 0; j < 15; j++) {
+        //visite[i][j] = false;ancien
+        set(j, i, false);
+      }
+    }
+    int taille_listes = 255;  //apparemment la limte sinon bug de matrice
+    //PaireInt res[taille_listes];
+    //uint8_t res_x[taille_listes];
+    //uint8_t res_y[taille_listes];
+    //int taille = 0;  //taille du paquet de retour
+    taille = 0;
+    //PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
+    uint8_t file_x[taille_listes];
+    uint8_t file_y[taille_listes];
+    int debut = 0;  //la ou on defile
+    int fin = 1;    //la ou on enfile
+
+    //visite[lig][col] = true;  //on visite la boule ancien
+    set(col, lig, true);
+
+    //file[0].fst = col;
+    //file[0].snd = lig;
+
+    file_x[0] = col;
+    file_y[0] = lig;
+
+    while (debut != fin) {
+      //PaireInt z = file[debut];  //on defile dans a
+      //int x = z.fst;
+      //int y = z.snd;
+      int x = file_x[debut];
+      int y = file_y[debut];
+
+      debut = debut + 1;
+
+
+
+
+      //res[taille] = z;  //on ajoute a au retour
+      res_x[taille] = x;
+      res_y[taille] = y;
+      taille++;
+      //Serial.println(taille);
+
+
+      //on calcule tous les voisins de a
+
+      //PaireInt voisins[6];
+      uint8_t voisins_x[6];
+      uint8_t voisins_y[6];
+      int depl;
+      if (y % 2 == 0) {
+        depl = -1;
+      } else {
+        depl = 1;
+      }
+      //voisins[0].fst = x;
+      //voisins[0].snd = y - 1;
+      voisins_x[0] = x;
+      voisins_y[0] = y - 1;
+
+      //voisins[1].fst = x + depl;
+      //voisins[1].snd = y - 1;
+      voisins_x[1] = x + depl;
+      voisins_y[1] = y - 1;
+
+      //voisins[2].fst = x + 1;
+      //voisins[2].snd = y;
+      voisins_x[2] = x + 1;
+      voisins_y[2] = y;
+
+      //voisins[3].fst = x - 1;
+      //voisins[3].snd = y;
+      voisins_x[3] = x - 1;
+      voisins_y[3] = y;
+
+      //voisins[4].fst = x;
+      //voisins[4].snd = y + 1;
+      voisins_x[4] = x;
+      voisins_y[4] = y + 1;
+
+      //voisins[5].fst = x + depl;
+      //voisins[5].snd = y + 1;
+      voisins_x[5] = x + depl;
+      voisins_y[5] = y + 1;
+
+
+
+      //on visite tous les voisins de a possibles
+
+      for (int i = 0; i < 6; i++) {
+        //PaireInt w = voisins[i];
+        //int x = w.fst;
+        //int y = w.snd;
+        int x = voisins_x[i];
+        int y = voisins_y[i];
+        //Serial.print("x: ");
+        //Serial.println(x);
+        //Serial.print("y: ");
+        //Serial.println(y);
+
+        if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !get(x, y) && jeu[y][x] % 32 == coul && fin != taille_listes) {  //ancien !visite[y][x]
+          //ajouter w dans file attente
+          //visite[y][x] = true;ancien
+          set(x, y, true);
+          //file[fin].fst=x;
+          //file[fin].snd=y;
+          file_x[fin] = x;
+          file_y[fin] = y;
+          fin++;
+        }
+      }
+    }
+
+    if (taille > 2) {
+      clignote = 1;
+      /*for (int k = 0; k < taille; k++) {
       //PaireInt pop = res[k];
       //int j = pop.fst;
       //int i = pop.snd;
@@ -843,249 +894,235 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       else{
         auxiliaire2=0;
       }*/
-      if (i % 2 == 0) {
+      /*if (i % 2 == 0) {
         matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
       } else {
         matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[0]);
-      }
+      }*/
       //est_pause=true;
       //tps=millis();
-    }  //}
-  } else {
+    
+      //}
+  }
+  else {
     numero_tir++;
   }
-  Serial.println("fin");
+  Serial.println("fin3");
 }
 
 void deplacer_cube() {
-  if(en_jeu){
-  if (deplacement && case_libre()) {
-    for (int i = 0; i < 2; i++) {
+  if (en_jeu) {
+    Serial.println(pret);
+    //Serial.println(deplacement);
+    if (deplacement && case_libre() && pret) {
+      for (int i = 0; i < 2; i++) {
 
-      if (incl_cube == 0) {
-        matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[couleur_cube * i]);  //boule a envoyer
-        if (i == 0) {
-          pos_cube_y = pos_cube_y - 1;
-        }
-      } else if (incl_cube == 1) {
-        if (pos_cube_x == 59) {
-          matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[couleur_cube * i]);
-
+        if (incl_cube == 0) {
+          matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[couleur_cube * i]);  //boule a envoyer
           if (i == 0) {
-            pos_cube_x = pos_cube_x + 1;
-            pos_cube_y = pos_cube_y - 1;
-            incl_cube = -1;
-          }
-        } else {
-
-
-
-          matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[couleur_cube * i]);
-
-          if (i == 0) {
-            pos_cube_x = pos_cube_x + 1;
             pos_cube_y = pos_cube_y - 1;
           }
-        }
-      } else if (incl_cube == -1) {
+        } else if (incl_cube == 1) {
+          if (pos_cube_x == 59) {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[couleur_cube * i]);
 
-        if (pos_cube_x == 2) {
-          matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[couleur_cube * i]);
+            if (i == 0) {
+              pos_cube_x = pos_cube_x + 1;
+              pos_cube_y = pos_cube_y - 1;
+              incl_cube = -1;
+            }
+          } else {
 
-          if (i == 0) {
-            pos_cube_x = pos_cube_x - 1;
-            pos_cube_y = pos_cube_y - 1;
-            incl_cube = 1;
+
+
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[couleur_cube * i]);
+
+            if (i == 0) {
+              pos_cube_x = pos_cube_x + 1;
+              pos_cube_y = pos_cube_y - 1;
+            }
           }
-        } else {
-          matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[couleur_cube * i]);
+        } else if (incl_cube == -1) {
 
-          if (i == 0) {
-            pos_cube_x = pos_cube_x - 1;
-            pos_cube_y = pos_cube_y - 1;
+          if (pos_cube_x == 2) {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[couleur_cube * i]);
 
-            if (pos_cube_x == marge_g) {  //gere la collision a gauche
+            if (i == 0) {
+              pos_cube_x = pos_cube_x - 1;
+              pos_cube_y = pos_cube_y - 1;
               incl_cube = 1;
+            }
+          } else {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[couleur_cube * i]);
+
+            if (i == 0) {
+              pos_cube_x = pos_cube_x - 1;
+              pos_cube_y = pos_cube_y - 1;
+
+              if (pos_cube_x == marge_g) {  //gere la collision a gauche
+                incl_cube = 1;
+              }
             }
           }
         }
       }
-    }
-  } else if (deplacement) {
-    deplacement = false;
-    if(ligne==17){
-      if (incl_cube == 0) {  //effacage du cube mal positionné
-      matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
-    } else if (incl_cube == -1) {
-      if (pos_cube_x == 2) {
+    } else if (deplacement && pret) {
+      deplacement = false;
+      if (ligne == 17) {
+        if (incl_cube == 0) {  //effacage du cube mal positionné
+          matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
+        } else if (incl_cube == -1) {
+          if (pos_cube_x == 2) {
 
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
 
+          } else {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[0]);
+          }
+        } else if (incl_cube == 1) {
+          if (pos_cube_x == 59) {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
+
+          } else {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[0]);
+          }
+        }
+        matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[couleur_cube]);//repositionnement du cube
+        couleur_cube = random(1, nb_couleur);
+        if (incl == 0) {
+          //pos_cube_x = pos;
+          //pos_cube_y = 63 - hauteur - 5;
+          matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube]);  //boule a envoyer
+        } else if (incl == -1) {
+          //pos_cube_x = pos - 5;
+          //pos_cube_y = 63 - hauteur - 5;
+          matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
+          matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
+          matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
+        } else if (incl == 1) {
+          //pos_cube_x = pos + 5;
+          //pos_cube_y = 63 - hauteur - 5;
+          matrix.drawLine(pos + 7, matrix.height() - 6 - hauteur, pos + 5, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
+          matrix.drawLine(pos + 8, matrix.height() - 7 - hauteur, pos + 6, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
+          matrix.drawLine(pos + 9, matrix.height() - 8 - hauteur, pos + 7, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
+        }
+        en_jeu = false;
+        perdu();
       } else {
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[0]);
+        if (jeu[ligne][colonne] >= 32) {
+
+          jeu[ligne][colonne] = 32 + couleur_cube;  //mise a jour du jeu
+        } else {
+          jeu[ligne][colonne] = couleur_cube;  //mise a jour du jeu
+        }
+
+
+
+        if (incl_cube == 0) {  //effacage du cube mal positionné
+          matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
+        } else if (incl_cube == -1) {
+          if (pos_cube_x == 2) {
+
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
+
+          } else {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[0]);
+          }
+        } else if (incl_cube == 1) {
+          if (pos_cube_x == 59) {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
+
+          } else {
+            matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+            matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
+            matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[0]);
+          }
+        }
+
+
+        if (ligne % 2 == 0) {  //affichage du cube repositionné
+          matrix.fillRect(marge_g + colonne * 3 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne] % 32]);
+        } else {
+          matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne] % 32]);
+        }
+
+        exploser(ligne, colonne, couleur_cube);
+        pret=false;
+        //boules_isolees();
+
+
+        
       }
-    } else if (incl_cube == 1) {
-      if (pos_cube_x == 59) {
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
-
-      } else {
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[0]);
-      }
-    }
-      matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[couleur_cube]);
-    couleur_cube = random(1, nb_couleur);
-    if (incl == 0) {
-      //pos_cube_x = pos;
-      //pos_cube_y = 63 - hauteur - 5;
-      matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube]);  //boule a envoyer
-    } else if (incl == -1) {
-      //pos_cube_x = pos - 5;
-      //pos_cube_y = 63 - hauteur - 5;
-      matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
-      matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
-      matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
-    } else if (incl == 1) {
-      //pos_cube_x = pos + 5;
-      //pos_cube_y = 63 - hauteur - 5;
-      matrix.drawLine(pos + 7, matrix.height() - 6 - hauteur, pos + 5, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
-      matrix.drawLine(pos + 8, matrix.height() - 7 - hauteur, pos + 6, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
-      matrix.drawLine(pos + 9, matrix.height() - 8 - hauteur, pos + 7, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
-    }
-      en_jeu=false;
-      perdu();
-    }
-    else{
-    if(jeu[ligne][colonne]>=32){
-
-      jeu[ligne][colonne] = 32+couleur_cube;  //mise a jour du jeu
-    }
-    else{
-      jeu[ligne][colonne] = couleur_cube;  //mise a jour du jeu
-    }
-    
-
-
-    if (incl_cube == 0) {  //effacage du cube mal positionné
-      matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
-    } else if (incl_cube == -1) {
-      if (pos_cube_x == 2) {
-
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
-
-      } else {
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[0]);
-      }
-    } else if (incl_cube == 1) {
-      if (pos_cube_x == 59) {
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
-
-      } else {
-        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
-        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
-        matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[0]);
-      }
-    }
-
-
-    if (ligne % 2 == 0) {  //affichage du cube repositionné
-      matrix.fillRect(marge_g + colonne * 3 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne]%32]);
-    } else {
-      matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne]%32]);
-    }
-    
-      exploser(ligne, colonne, couleur_cube);
-      boules_isolees();
-    
-
-    couleur_cube = random(1, nb_couleur);
-    if (incl == 0) {
-      //pos_cube_x = pos;
-      //pos_cube_y = 63 - hauteur - 5;
-      matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube]);  //boule a envoyer
-    } else if (incl == -1) {
-      //pos_cube_x = pos - 5;
-      //pos_cube_y = 63 - hauteur - 5;
-      matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
-      matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
-      matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
-    } else if (incl == 1) {
-      //pos_cube_x = pos + 5;
-      //pos_cube_y = 63 - hauteur - 5;
-      matrix.drawLine(pos + 7, matrix.height() - 6 - hauteur, pos + 5, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
-      matrix.drawLine(pos + 8, matrix.height() - 7 - hauteur, pos + 6, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
-      matrix.drawLine(pos + 9, matrix.height() - 8 - hauteur, pos + 7, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
     }
   }
-  }
-}
 }
 
 
 
 void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclinaison -1=gauche 0=rester 1=droite et en position -1=gauche 0=rester 1=droite
-  if(en_jeu){
-  if (estPossible(dirdem, incldem)) {
+  if (en_jeu) {
+    if (estPossible(dirdem, incldem)) {
 
-    for (int i = 0; i < 2; i++) {
-      Serial.println(incl);
-      Serial.println(incldem);
-      if (incl == 0) {
-        if (not(deplacement)) {
-          matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube * i]);  //boule a envoyer
+      for (int i = 0; i < 2; i++) {
+        Serial.println(incl);
+        Serial.println(incldem);
+        if (incl == 0) {
+          if (not(deplacement)) {
+            matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube * i]);  //boule a envoyer
+          }
+          matrix.fillRect(pos, matrix.height() - 4 - hauteur, 3, 4, matrix.Color888(255 * i, 0, 0));  //base de la fleche
+
+        } else if (incl == -1) {
+
+          matrix.drawLine(pos, matrix.height() - 1 - hauteur, pos - 3, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));  //base de la fleche
+          matrix.drawLine(pos + 1, matrix.height() - 1 - hauteur, pos - 2, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
+          matrix.drawLine(pos + 2, matrix.height() - 1 - hauteur, pos - 1, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
+
+          if (not(deplacement)) {
+            matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
+            matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube * i]);
+          }
+        } else if (incl == 1) {
+          matrix.drawLine(pos, matrix.height() - 1 - hauteur, pos + 3, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));  //base de la fleche
+          matrix.drawLine(pos + 1, matrix.height() - 1 - hauteur, pos + 4, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
+          matrix.drawLine(pos + 2, matrix.height() - 1 - hauteur, pos + 5, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
+
+          if (not(deplacement)) {
+            matrix.drawLine(pos + 5, matrix.height() - 6 - hauteur, pos + 7, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
+            matrix.drawLine(pos + 6, matrix.height() - 7 - hauteur, pos + 8, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
+            matrix.drawLine(pos + 7, matrix.height() - 8 - hauteur, pos + 9, matrix.height() - 8 - hauteur, couleurs[couleur_cube * i]);
+          }
         }
-        matrix.fillRect(pos, matrix.height() - 4 - hauteur, 3, 4, matrix.Color888(255 * i, 0, 0));  //base de la fleche
-
-      } else if (incl == -1) {
-        
-        matrix.drawLine(pos, matrix.height() - 1 - hauteur, pos - 3, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));  //base de la fleche
-        matrix.drawLine(pos + 1, matrix.height() - 1 - hauteur, pos - 2, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
-        matrix.drawLine(pos + 2, matrix.height() - 1 - hauteur, pos - 1, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
-
-        if (not(deplacement)) {
-          matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
-          matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube * i]);
+        if (i == 0) {
+          incl = incl + incldem;
+          pos = pos + dirdem;
         }
-      } else if (incl == 1) {
-        matrix.drawLine(pos, matrix.height() - 1 - hauteur, pos + 3, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));  //base de la fleche
-        matrix.drawLine(pos + 1, matrix.height() - 1 - hauteur, pos + 4, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
-        matrix.drawLine(pos + 2, matrix.height() - 1 - hauteur, pos + 5, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
-
-        if (not(deplacement)) {
-          matrix.drawLine(pos + 5, matrix.height() - 6 - hauteur, pos + 7, matrix.height() - 6 - hauteur, couleurs[couleur_cube * i]);  //boule a envoyer en lignes horizontales
-          matrix.drawLine(pos + 6, matrix.height() - 7 - hauteur, pos + 8, matrix.height() - 7 - hauteur, couleurs[couleur_cube * i]);
-          matrix.drawLine(pos + 7, matrix.height() - 8 - hauteur, pos + 9, matrix.height() - 8 - hauteur, couleurs[couleur_cube * i]);
-        }
-      }
-      if (i == 0) {
-        incl = incl + incldem;
-        pos = pos + dirdem;
       }
     }
   }
-}
 }
 
 void loop() {
@@ -1101,7 +1138,7 @@ void loop() {
   }*/
 
   if (Serial.available() > 0) {
-    
+
     char command = Serial.read();
     Serial.println(command);
     //noInterrupts();
