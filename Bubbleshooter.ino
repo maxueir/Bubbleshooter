@@ -1,5 +1,6 @@
 
 #include <TimerThree.h>
+#include <TimerFour.h>
 #include <DFRobot_RGBMatrix.h>  // Hardware-specific library
 #include <gamma.h>
 #include <Adafruit_GFX.h>
@@ -32,19 +33,18 @@ volatile uint8_t numero_tir = 0;       //indique combien de tir on a tiré (pour
 volatile uint8_t taille_descente = 1;  //indique de combien on descent par descente
 
 volatile uint8_t pos = 30;  //position de la fleche d'envoi en x
-volatile uint8_t incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
 volatile uint8_t ligne = 0;  //ligne et colonne du cube pour ajuster sa position
 volatile uint8_t colonne = 0;
 
-//bool est_pause = false;
-//int tps = 0;
+volatile uint8_t clignote = 0;//0=> eteint 1=> allume
 
 volatile int score = 0;  // score
 
 volatile uint8_t pos_cube_x = 0;    //position de la boule en bas a gauche en x
 volatile uint8_t pos_cube_y = 0;    //position de la boule en bas a gauche en y
-volatile uint8_t incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile int incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile uint8_t couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
 volatile uint8_t res_x[255];
@@ -77,12 +77,22 @@ void setup() {
   //Timer3.initialize(75000);//defini l'intervalle
   Timer3.initialize(25000);  //definit l'intervalle un 0 en -
   Timer3.attachInterrupt(deplacer_cube);
+  Timer4.initialize(50000);  //clignote toutes les demi secondes
+  Timer4.attachInterrupt(clignote);
   //init_anim(); // animation de lancement du jeu
   //init_interface(); // initialise l'interface de jeu
   initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
   //afficher_jeu();
+}
+
+void clignote(){
+  if (clignote!=0){
+    for(int i=0;i<taille;i++){
+      int a=0;
+    }
+  }
 }
 
 void set(uint8_t x, uint8_t y,bool b){
@@ -1039,7 +1049,8 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
   if (estPossible(dirdem, incldem)) {
 
     for (int i = 0; i < 2; i++) {
-        Serial.println("la");
+      Serial.println(incl);
+      Serial.println(incldem);
       if (incl == 0) {
         if (not(deplacement)) {
           matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube * i]);  //boule a envoyer
@@ -1047,6 +1058,7 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
         matrix.fillRect(pos, matrix.height() - 4 - hauteur, 3, 4, matrix.Color888(255 * i, 0, 0));  //base de la fleche
 
       } else if (incl == -1) {
+        
         matrix.drawLine(pos, matrix.height() - 1 - hauteur, pos - 3, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));  //base de la fleche
         matrix.drawLine(pos + 1, matrix.height() - 1 - hauteur, pos - 2, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
         matrix.drawLine(pos + 2, matrix.height() - 1 - hauteur, pos - 1, matrix.height() - 4 - hauteur, matrix.Color888(255 * i, 0, 0));
