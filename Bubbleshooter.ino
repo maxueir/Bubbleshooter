@@ -21,31 +21,35 @@
 DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 
 //taille d'un bubble shooter : 17 de large et 16 de hauteur (17=> peerdu)
-int hauteur = 1;  //hauteur du jeu
-int marge_g = 1;  //marge du jeu
-int marge_d = 2;  //marge du jeu
-int en_tete = 1;  //en_tete du jeu
+uint8_t hauteur = 1;  //hauteur du jeu
+uint8_t marge_g = 1;  //marge du jeu
+uint8_t marge_d = 2;  //marge du jeu
+uint8_t en_tete = 1;  //en_tete du jeu
 
-int nb_couleur = 7;       //affiche nb_couleur - 1 dans le jeu
-int nb_tirs = 4;          //nb de tirs avant que ca descende
-volatile int numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
-volatile int taille_descente = 1;  //indique de combien on descent par descente
+uint8_t nb_couleur = 7;       //affiche nb_couleur - 1 dans le jeu
+uint8_t nb_tirs = 4;          //nb de tirs avant que ca descende
+volatile uint8_t numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
+volatile uint8_t taille_descente = 1;  //indique de combien on descent par descente
 
-volatile int pos = 30;  //position de la fleche d'envoi en x
-volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile uint8_t pos = 30;  //position de la fleche d'envoi en x
+volatile uint8_t incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
-volatile int ligne = 0;  //ligne et colonne du cube pour ajuster sa position
-volatile int colonne = 0;
+volatile uint8_t ligne = 0;  //ligne et colonne du cube pour ajuster sa position
+volatile uint8_t colonne = 0;
 
-bool est_pause = false;
-int tps = 0;
+//bool est_pause = false;
+//int tps = 0;
 
 volatile int score = 0;  // score
 
-volatile int pos_cube_x = 0;    //position de la boule en bas a gauche en x
-volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
-volatile int incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
-volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
+volatile uint8_t pos_cube_x = 0;    //position de la boule en bas a gauche en x
+volatile uint8_t pos_cube_y = 0;    //position de la boule en bas a gauche en y
+volatile uint8_t incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
+volatile uint8_t couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
+
+volatile uint8_t res_x[255];
+volatile uint8_t res_y[255];
+volatile uint8_t taille = 0;  //taille du paquet de retour
 
 volatile uint8_t jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
 volatile bool visite[17][15];//18 où la 18eme => partie perdue
@@ -80,6 +84,18 @@ void setup() {
   //Serial.print("affichage");
   //afficher_jeu();
 }
+
+void set(uint8_t x, uint8_t y,bool b){
+  if(jeu[y][x]>=32 && !b){
+    jeu[y][x]=jeu[y][x]-32;
+  }
+  else if(jeu[y][x]<32 && b ){
+    jeu[y][x]=jeu[y][x]+32;
+  }
+}
+bool get(uint8_t x, uint8_t y){
+  return jeu[y][x]>=32;
+} 
 
 void init_anim() {
   static int x_letter = (matrix.width() / 2) - 3;
@@ -153,7 +169,8 @@ void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille es
   //forward propagation; on prends le probleme à l'envers; on regarde toutes les billes accessibles depuis la ligne -1
   for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
-      visite[i][j] = false;
+      //visite[i][j] = false; ancien
+      set(j,i,false);
     }
   }
 
@@ -165,7 +182,8 @@ void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille es
 
   for (int i = 0; i < 15; i++) {
     if (jeu[0][i] != 0) {
-      visite[0][i] = true;
+      //visite[0][i] = true;ancien
+      set(i,0,true);
       file_x[fin] = i;
       file_y[fin] = 0;
       fin++;
@@ -227,9 +245,10 @@ void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille es
       //Serial.print("y: ");
       //Serial.println(y);
 
-      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !visite[y][x] && jeu[y][x] != 0) {  //&& fin != taille_listes
+      if (x <= 14 && x >= 0 && y >= 0 && y <= 16 && !get(x,y) && jeu[y][x] != 0) {  //&& fin != taille_listes  (ancien !visite[y][x])
         //ajouter w dans file attente
-        visite[y][x] = true;
+        //visite[y][x] = true;ancien
+        set(x,y,true);
         //file[fin].fst=x;
         //file[fin].snd=y;
         file_x[fin] = x;
@@ -240,7 +259,7 @@ void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille es
   }
   for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
-      if (!visite[i][j] && jeu[i][j] != 0) {
+      if (!get(j,i) && jeu[i][j] != 0) {//ancien !visite[i][j]
         jeu[i][j] = 0;
         if (i % 2 == 0) {
           matrix.fillRect(marge_g + j * 3 + j, en_tete + i * 3, 3, 3, couleurs[0]);
@@ -310,7 +329,7 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
 
     for (int i = 0; i <15; i++) {
       if(jeu[17 - taille_descente][i]!=0){
-            verif=false;
+            verif=false;//TODO bug lignes
             matrix.fillRect(marge_g + i * 3 + 2 + i, en_tete + 17 * 3, 3, 3, couleurs[jeu[17 - taille_descente][i]]);
             }
     }
@@ -341,7 +360,7 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
       en_jeu=false;
       perdu();
     }
-interrupts();
+//interrupts();
 
 
   //} else {
@@ -351,7 +370,7 @@ interrupts();
 }
 
 void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
-  //Serial.println("LE NUL IL A PERDU");
+  Serial.println("LE NUL IL A PERDU");
   //a completer
 }
 
@@ -654,26 +673,32 @@ Serial.println("fin");
 
 void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
   
-
+  for (int i = 0; i < taille; i++) {
+    res_x[i]=0;
+    res_y[i]=0;
+  }
 
 
   for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
-      visite[i][j] = false;
+      //visite[i][j] = false;ancien
+      set(j,i,false);
     }
   }
   int taille_listes = 255;  //apparemment la limte sinon bug de matrice
   //PaireInt res[taille_listes];
-  uint8_t res_x[taille_listes];
-  uint8_t res_y[taille_listes];
-  int taille = 0;  //taille du paquet de retour
+  //uint8_t res_x[taille_listes];
+  //uint8_t res_y[taille_listes];
+  //int taille = 0;  //taille du paquet de retour
+  taille=0;
   //PaireInt file[taille_listes];  //file d'attente de couple; (x,y)
   uint8_t file_x[taille_listes];
   uint8_t file_y[taille_listes];
   int debut = 0;  //la ou on defile
   int fin = 1;    //la ou on enfile
 
-  visite[lig][col] = true;  //on visite la boule
+  //visite[lig][col] = true;  //on visite la boule ancien
+  set(col,lig,true);
 
   //file[0].fst = col;
   //file[0].snd = lig;
