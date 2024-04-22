@@ -47,13 +47,14 @@ volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
-volatile uint8_t jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
-bool visite[17][15];
+volatile uint8_t jeu[18][15];  //que des 0 partout par defaut, donc aucune bille
+bool visite[17][15];//18 où la 18eme => partie perdue
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
 
 volatile bool deplacement = false;  //booleen pour indiquer si la boule est en deplacement
+bool en_jeu=true;
 
 struct PaireInt {
   int fst;  //premier du couple, coordonnée en x
@@ -65,6 +66,8 @@ void setup() {
   matrix.begin();
   Serial.begin(9600);
   delay(1100);  // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois
+  matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
+  matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
   //Serial.println("ici");
   //matrix.fillScreen(0);
   //Timer3.initialize(75000);//defini l'intervalle
@@ -137,6 +140,10 @@ void init_anim() {
     }
   }
   initialisation_jeu();
+}
+
+void clignoter(){
+  int i=0;
 }
 
 void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
@@ -291,29 +298,38 @@ void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille es
 void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle ligne
   bool verif = true;  //verifie si une bille fait perdre le joueur
 
-  for (int i = 17 - taille_descente; i < 17; i++) {  //a remplacer par un while pour la complexité
+  /*for (int i = 17 - taille_descente; i < 17; i++) {  //a remplacer par un while pour la complexité
     for (int j = 0; j < 15; j++) {
       if (jeu[i][j] != 0) {
         verif = false;
       }
     }
-  }
+  }*/
 
-  if (verif) {
+  //if (verif) {
     for (int i = 16; i >= 0; i--) {
       for (int j = 14; j >= 0; j--) {
         if (i < taille_descente) {
           jeu[i][j] = random(1, nb_couleur);
         } else {
           jeu[i][j] = jeu[i - taille_descente][j];
+          Serial.println(i==17 && jeu[i - taille_descente][j]!=0);
+          if(i==17 && jeu[i - taille_descente][j]!=0){
+            verif=false;
+          }
         }
       }
     }
     afficher_jeu();
     boules_isolees();
-  } else {
-    perdu();
-  }
+    if(!verif){
+      en_jeu=false;
+      perdu();
+    }
+  //} else {
+  //  en_jeu=false;
+  //  perdu();
+  //}
 }
 
 void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
@@ -340,7 +356,7 @@ void init_interface() {
 
 void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 
-  for (int i = 0; i < 17; i++) {
+  for (int i = 0; i < 18; i++) {
     for (int j = 0; j < 15; j++) {
 
       if (i % 2 == 0) {
@@ -619,6 +635,7 @@ Serial.println("fin");
 }
 
 void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
+  
 
 
 
@@ -766,6 +783,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 }
 
 void deplacer_cube() {
+  if(en_jeu){
   if (deplacement && case_libre()) {
     for (int i = 0; i < 2; i++) {
 
@@ -865,6 +883,7 @@ void deplacer_cube() {
       matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne]]);
     }
     if (ligne == 17) {
+      en_jeu=false;
       perdu();
     } else {
       exploser(ligne, colonne, couleur_cube);
@@ -891,9 +910,12 @@ void deplacer_cube() {
     }
   }
 }
+}
+
 
 
 void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclinaison -1=gauche 0=rester 1=droite et en position -1=gauche 0=rester 1=droite
+  if(en_jeu){
   if (estPossible(dirdem, incldem)) {
 
     for (int i = 0; i < 2; i++) {
@@ -931,6 +953,7 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
       }
     }
   }
+}
 }
 
 void loop() {
