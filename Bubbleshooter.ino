@@ -28,14 +28,14 @@ int en_tete = 1;  //en_tete du jeu
 
 int nb_couleur = 7;       //affiche nb_couleur - 1 dans le jeu
 int nb_tirs = 4;          //nb de tirs avant que ca descende
-int numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
-int taille_descente = 1;  //indique de combien on descent par descente
+volatile int numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
+volatile int taille_descente = 1;  //indique de combien on descent par descente
 
 volatile int pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;  //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
-int ligne = 0;  //ligne et colonne du cube pour ajuster sa position
-int colonne = 0;
+volatile int ligne = 0;  //ligne et colonne du cube pour ajuster sa position
+volatile int colonne = 0;
 
 bool est_pause = false;
 int tps = 0;
@@ -47,14 +47,14 @@ volatile int pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = 0;     //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile int couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
 
-volatile uint8_t jeu[18][15];  //que des 0 partout par defaut, donc aucune bille
-bool visite[17][15];//18 où la 18eme => partie perdue
+volatile uint8_t jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
+volatile bool visite[17][15];//18 où la 18eme => partie perdue
 
 //DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
 
 volatile bool deplacement = false;  //booleen pour indiquer si la boule est en deplacement
-bool en_jeu=true;
+volatile bool en_jeu=true;
 
 struct PaireInt {
   int fst;  //premier du couple, coordonnée en x
@@ -307,25 +307,43 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
   }*/
 
   //if (verif) {
+
+    for (int i = 0; i <15; i++) {
+      if(jeu[17 - taille_descente][i]!=0){
+            verif=false;
+            matrix.fillRect(marge_g + i * 3 + 2 + i, en_tete + 17 * 3, 3, 3, couleurs[jeu[17 - taille_descente][i]]);
+            }
+    }
     for (int i = 16; i >= 0; i--) {
       for (int j = 14; j >= 0; j--) {
         if (i < taille_descente) {
           jeu[i][j] = random(1, nb_couleur);
         } else {
-          jeu[i][j] = jeu[i - taille_descente][j];
-          Serial.println(i==17 && jeu[i - taille_descente][j]!=0);
-          if(i==17 && jeu[i - taille_descente][j]!=0){
+          if(i==17){
+            if(jeu[i - taille_descente][j]!=0){
             verif=false;
+            matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i - taille_descente][j]]);
+            }
           }
+          else{
+          jeu[i][j] = jeu[i - taille_descente][j];
+          //Serial.println(i==17 && jeu[i - taille_descente][j]!=0);
+          }
+          
         }
       }
     }
     afficher_jeu();
     boules_isolees();
+
+
     if(!verif){
       en_jeu=false;
       perdu();
     }
+interrupts();
+
+
   //} else {
   //  en_jeu=false;
   //  perdu();
@@ -333,7 +351,7 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
 }
 
 void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
-  Serial.println("LE NUL IL A PERDU");
+  //Serial.println("LE NUL IL A PERDU");
   //a completer
 }
 
@@ -356,7 +374,7 @@ void init_interface() {
 
 void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 
-  for (int i = 0; i < 18; i++) {
+  for (int i = 0; i < 17; i++) {
     for (int j = 0; j < 15; j++) {
 
       if (i % 2 == 0) {
@@ -846,6 +864,56 @@ void deplacer_cube() {
     }
   } else if (deplacement) {
     deplacement = false;
+    if(ligne==17){
+      if (incl_cube == 0) {  //effacage du cube mal positionné
+      matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
+    } else if (incl_cube == -1) {
+      if (pos_cube_x == 2) {
+
+        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
+        matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
+
+      } else {
+        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+        matrix.drawLine(pos_cube_x - 1, pos_cube_y - 1, pos_cube_x + 1, pos_cube_y - 1, couleurs[0]);
+        matrix.drawLine(pos_cube_x - 2, pos_cube_y - 2, pos_cube_x, pos_cube_y - 2, couleurs[0]);
+      }
+    } else if (incl_cube == 1) {
+      if (pos_cube_x == 59) {
+        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
+        matrix.drawLine(pos_cube_x, pos_cube_y - 2, pos_cube_x + 2, pos_cube_y - 2, couleurs[0]);
+
+      } else {
+        matrix.drawLine(pos_cube_x, pos_cube_y, pos_cube_x + 2, pos_cube_y, couleurs[0]);
+        matrix.drawLine(pos_cube_x + 1, pos_cube_y - 1, pos_cube_x + 3, pos_cube_y - 1, couleurs[0]);
+        matrix.drawLine(pos_cube_x + 2, pos_cube_y - 2, pos_cube_x + 4, pos_cube_y - 2, couleurs[0]);
+      }
+    }
+      matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[couleur_cube]);
+    couleur_cube = random(1, nb_couleur);
+    if (incl == 0) {
+      //pos_cube_x = pos;
+      //pos_cube_y = 63 - hauteur - 5;
+      matrix.fillRect(pos, matrix.height() - 8 - hauteur, 3, 3, couleurs[couleur_cube]);  //boule a envoyer
+    } else if (incl == -1) {
+      //pos_cube_x = pos - 5;
+      //pos_cube_y = 63 - hauteur - 5;
+      matrix.drawLine(pos - 5, matrix.height() - 6 - hauteur, pos - 3, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
+      matrix.drawLine(pos - 6, matrix.height() - 7 - hauteur, pos - 4, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
+      matrix.drawLine(pos - 7, matrix.height() - 8 - hauteur, pos - 5, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
+    } else if (incl == 1) {
+      //pos_cube_x = pos + 5;
+      //pos_cube_y = 63 - hauteur - 5;
+      matrix.drawLine(pos + 7, matrix.height() - 6 - hauteur, pos + 5, matrix.height() - 6 - hauteur, couleurs[couleur_cube]);  //boule a envoyer en lignes horizontales
+      matrix.drawLine(pos + 8, matrix.height() - 7 - hauteur, pos + 6, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
+      matrix.drawLine(pos + 9, matrix.height() - 8 - hauteur, pos + 7, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
+    }
+      en_jeu=false;
+      perdu();
+    }
+    else{
     jeu[ligne][colonne] = couleur_cube;  //mise a jour du jeu
 
 
@@ -882,13 +950,10 @@ void deplacer_cube() {
     } else {
       matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne]]);
     }
-    if (ligne == 17) {
-      en_jeu=false;
-      perdu();
-    } else {
+    
       exploser(ligne, colonne, couleur_cube);
       boules_isolees();
-    }
+    
 
     couleur_cube = random(1, nb_couleur);
     if (incl == 0) {
@@ -908,6 +973,7 @@ void deplacer_cube() {
       matrix.drawLine(pos + 8, matrix.height() - 7 - hauteur, pos + 6, matrix.height() - 7 - hauteur, couleurs[couleur_cube]);
       matrix.drawLine(pos + 9, matrix.height() - 8 - hauteur, pos + 7, matrix.height() - 8 - hauteur, couleurs[couleur_cube]);
     }
+  }
   }
 }
 }
@@ -969,8 +1035,10 @@ void loop() {
   }*/
 
   if (Serial.available() > 0) {
+    
     char command = Serial.read();
     Serial.println(command);
+    //noInterrupts();
     if (command == 'a') {
       deplacer(0, -1);
     } else if (command == 'e') {
@@ -998,5 +1066,6 @@ void loop() {
         }
       }
     }
+    //interrupts();
   }
 }
