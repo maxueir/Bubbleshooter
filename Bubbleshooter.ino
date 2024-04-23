@@ -141,6 +141,7 @@ Serial.println(clignote);
     }
     clignote++;
     if(clignote==8){
+      pret=true;
       couleur_cube = random(1, nb_couleur);//re-armer le canon
         if (incl == 0) {
           //pos_cube_x = pos;
@@ -167,7 +168,7 @@ Serial.println(clignote);
       numero_tir = 0;
       descendre();
     }
-    pret=true;
+    
     }
 
   }
@@ -906,6 +907,7 @@ Serial.println(clignote);
   }
   else {
     numero_tir++;
+    pret=true;
   }
   Serial.println("fin3");
 }
@@ -914,7 +916,7 @@ void deplacer_cube() {
   if (en_jeu) {
     Serial.println(pret);
     //Serial.println(deplacement);
-    if (deplacement && case_libre() && pret) {
+    if (deplacement && case_libre()) {
       for (int i = 0; i < 2; i++) {
 
         if (incl_cube == 0) {
@@ -974,7 +976,7 @@ void deplacer_cube() {
           }
         }
       }
-    } else if (deplacement && pret) {
+    } else if (deplacement) {
       deplacement = false;
       if (ligne == 17) {
         if (incl_cube == 0) {  //effacage du cube mal positionné
@@ -1067,9 +1069,9 @@ void deplacer_cube() {
         } else {
           matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[jeu[ligne][colonne] % 32]);
         }
-
+        
         exploser(ligne, colonne, couleur_cube);
-        pret=false;
+        
         //boules_isolees();
 
 
@@ -1138,9 +1140,10 @@ void loop() {
   }*/
 
   if (Serial.available() > 0) {
-
+    
     char command = Serial.read();
     Serial.println(command);
+    
     //noInterrupts();
     if (command == 'a') {
       deplacer(0, -1);
@@ -1150,8 +1153,10 @@ void loop() {
       deplacer(-1, 0);
     } else if (command == 'd') {
       deplacer(1, 0);
-    } else if (command == 'z') {
+    } else if (command == 'z' && pret) {
+      
       if (!deplacement) {
+        pret=false;
         deplacement = true;
         incl_cube = incl;
 
@@ -1170,5 +1175,6 @@ void loop() {
       }
     }
     //interrupts();
+  
   }
 }
