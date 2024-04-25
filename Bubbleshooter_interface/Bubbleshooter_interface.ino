@@ -1,3 +1,4 @@
+#include <TimerThree.h>
 #include <DFRobot_RGBMatrix.h>  // Hardware-specific library
 #include <gamma.h>
 #include <Adafruit_GFX.h>
@@ -28,6 +29,8 @@ void setup() {
   delay(1100);
   //init_anim(); // animation de lancement du jeu
   init_interface(); // initialise l'interface de jeu
+  Timer3.initialize(25000);
+  //Timer3.attachInterrupt(deplacer_cube);
 }
 
 void init_anim() {
@@ -125,15 +128,17 @@ void maj_score() {
   sprintf(buf, "%d", num); // Convertit l'entier en chaîne de caractères
   Serial.println(buf); // Affiche "12"
   */
-  String ajout_score = String(333);
+  String ajout_score = String(0);
   // effacement du rectangle contenant l'affichage du score
   matrix.drawRect(11, 11, matrix.width()-1, matrix.height() - 22, matrix.Color333(0, 0, 0));
-  // signe "plus"
-  //matrix.drawLine(35 - 2, (matrix.height() / 2) - 6, 35 + 2, matrix.height() - 6, matrix.Color333(7, 7, 0));
-  //matrix.drawLine(35, matrix.height() - 6, 35, matrix.height() - 1, matrix.Color333(7, 7, 0));
+  int j = 0;
   for (int i = 0; i < ajout_score.length(); i++) {
     matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
+    j++;
   }
+  // signe "plus"
+  matrix.drawLine(matrix.width() - (7*(j+1)), (matrix.height() / 2) - 6, matrix.width() - (7*(j+1)), matrix.height() / 2, matrix.Color333(255, 0, 0));
+  matrix.drawLine(matrix.width() - (7*(j+1)) - 3, matrix.height() / 2 - 3, matrix.width() - (7*(j+1)) + 3, matrix.height() / 2 - 3, matrix.Color333(255, 0, 0));
   String nouv_score = String(score);
   for (int i = 0; i < nouv_score.length(); i++) {
     matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) + 4, nouv_score[nouv_score.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
@@ -155,27 +160,27 @@ void choix_difficulte() {
 
 void loop() {
   if (Serial2.available() > 0) { // vrai si o a reçu un caractère sur la liaison série
-    String info = Serial2.readString(); // met dans lu le caractère lu
+    String transmit = Serial2.readString(); // met dans lu le caractère lu
     Serial.print("Interface a reçu: ");
-    Serial.println(info); // Affiche le message reçu
+    Serial.println(transmit); // Affiche le message reçu
 
     bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
-    for (int i = 0; i < info.length(); i++) {
-      if (!isdigit(info[i])) { // Si un caractère n'est pas un chiffre
+    for (int i = 0; i < transmit.length(); i++) {
+      if (!isdigit(transmit[i])) { // Si un caractère n'est pas un chiffre
           isInt = false; // La chaîne n'est pas un entier
           break; // Sortir de la boucle
       }
     }
     if (isInt) {
-      score = score + info.toInt();
+      score = score + transmit.toInt();
       maj_score();
     }
     else {
-      if (info=="q" && level>0) {
+      if (transmit=="q" && level>0) {
         level--;
         choix_difficulte();
       }
-      else if (info=="d" && level<2) {
+      else if (transmit=="d" && level<2) {
         level++;
         choix_difficulte();
       }
