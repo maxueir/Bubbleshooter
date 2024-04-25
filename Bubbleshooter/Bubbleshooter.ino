@@ -61,7 +61,7 @@ color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), ma
 
 volatile bool deplacement = false;  //booleen pour indiquer si la boule est en deplacement
 volatile bool pret = true;  //booleen pour indiquer si la boule est prete a etre deplacee
-volatile bool en_jeu = true;
+volatile bool en_jeu = false;
 
 struct PaireInt {
   int fst;  //premier du couple, coordonnée en x
@@ -74,8 +74,7 @@ void setup() {
   Serial.begin(9600);
   Serial2.begin(9600);
   delay(1100);  // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois
-  matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
-  matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
+  
   //Serial.println("ici");
   //matrix.fillScreen(0);
   //Timer3.initialize(75000);//defini l'intervalle
@@ -121,6 +120,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     }
   }
   else{
+    pret=false;
     for (int k = 0; k < taille; k++) {
           int i=res_y[k];
           int j=res_x[k];
@@ -518,6 +518,9 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
 
   void initialisation_jeu() {
     //randomSeed(analogRead(0));
+    en_jeu=true;
+    matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
+    matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
     deplacer(1, 0);                //permet d'afficher le canon
     for (int i = 0; i < 9; i++) {  //9
       for (int j = 0; j < 15; j++) {
@@ -620,41 +623,34 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
         //ligne = pos_cube_y / 3 - 1;
         if (pos_cube_y % 3 == 0) {
           ligne = (pos_cube_y - 1) / 3;
-          if (ligne % 2 == 0) {
-            //Serial.println(pos_cube_x);
-            //Serial.println("pair");
-            colonne = (pos_cube_x + 2) / 4;
+      if (ligne % 2 == 0) {
+        Serial.println(pos_cube_x);
+        colonne = (pos_cube_x+3) / 4;
 
-            if (pos_cube_x == 57 || (pos_cube_x + 1) % 4 == 1 || (pos_cube_x + 1) % 4 == 2) {  // si il est a droite ou en face
-              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
-
-            } else if ((pos_cube_x + 1) % 4 == 0) {  //si il est entre deux cubes
-              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
-            } else {  //si il est a gauche
-
-              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] % 32 == 0 && jeu[ligne - 1][(pos_cube_x + 5) / 4] % 32 == 0);
-            }
+        if (pos_cube_x+3 == 60 || (pos_cube_x +2) % 4 == 1 || (pos_cube_x +2) % 4 == 2) {  // si il est en 1 ou a gauche ou en face
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+        } else if ((pos_cube_x +2) % 4 == 0) {  //si il est entre deux cubes
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne - 1] % 32 == 0);
+        } else {  //si il est a droite
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne - 1] % 32 == 0);
+        }
 
 
+      } else {
 
+        //colonne = 15 - (61 - pos_cube_x) / 4;
+        colonne = (pos_cube_x +2) / 4;
+        Serial.println(pos_cube_x);
+        if (pos_cube_x+3 == 59 || pos_cube_x+3 == 60 || (pos_cube_x + 4) % 4 == 2 || (pos_cube_x + 4) % 4 == 3) {  // si il est en 59 ou a droite ou en face
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
+        } else if ((pos_cube_x + 4) % 4 == 0) {  //si il est entre deux cubes
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne + 1] % 32 == 0);
+        } else {  //si il est a gauche
+          return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] % 32 == 0);
+        }
 
-          } else {
-
-            //colonne = 15 - (61 - pos_cube_x) / 4;
-            colonne = (pos_cube_x + 1) / 4;
-            Serial.println(pos_cube_x);
-            if (pos_cube_x == 57 || (pos_cube_x + 3) % 4 == 2 || (pos_cube_x + 3) % 4 == 1) {  // si il est en 57 ou a gauche ou en face
-              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);
-            } else if ((pos_cube_x + 3) % 4 == 0) {  //si il est entre deux cubes
-
-              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] % 32 == 0);
-            } else {  //si il est a droite
-              Serial.println("la");
-              return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne + 1] % 32 == 0 && jeu[ligne - 1][(pos_cube_x + 4) / 4] % 32 == 0);
-            }
-
-            //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
-          }
+        //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
+      }
         } else {  //verifier juste a droite du cube
           //Serial.println("test");
           ligne = (pos_cube_y - 1) / 3;
