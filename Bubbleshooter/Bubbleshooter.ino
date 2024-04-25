@@ -610,6 +610,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
           colonne = 14;
 
           return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);  //celle du dessus
+        
         } else if (ligne % 2 == 0 && pos_cube_y % 3 == 2) {
           colonne = 14;
           ligne--;
@@ -649,28 +650,30 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
         }
 
         //return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] == 0);
-      }
+        }
         } else {  //verifier juste a droite du cube
+
           //Serial.println("test");
           ligne = (pos_cube_y - 1) / 3;
           //pos_cube_y % 3 == 0
-          if (pos_cube_y > 3 && ligne % 2 == 0 && (pos_cube_x + 1) % 4 == 2) {  //si il peut y avoir un cube a droite sur une ligne paire
+          if (pos_cube_y > 3 && ligne % 2 == 0 && (pos_cube_x ) % 4 == 2 && pos_cube_x<53) {  //si il peut y avoir un cube a droite sur une ligne paire
             Serial.println("1");
             ligne--;
-            colonne = (pos_cube_x + 2) / 4;
-            return jeu[ligne - 1][(pos_cube_x + 5) / 4] % 32 == 0;
-          } else if (pos_cube_y > 3 && ligne % 2 == 1 && (pos_cube_x + 1) % 4 == 1) {  //si il peut y avoir un cube a droite sur une ligne impaire
+            colonne = (pos_cube_x ) / 4;//colonne ou va se poser le cube
+            return jeu[ligne - 1][colonne+1] % 32 == 0;//colonne sur laquelle le cube va faire une collision
+
+          } else if (pos_cube_y > 3 && ligne % 2 == 1 && (pos_cube_x) % 4 == 0 && pos_cube_x<55) {  //si il peut y avoir un cube a droite sur une ligne impaire
             //colonne--;//on descend le cube
             ligne--;
-            colonne = (pos_cube_x + 1) / 4;
+            colonne = (pos_cube_x) / 4;//colonne ou va se poser le cube
 
-            return jeu[ligne - 1][(pos_cube_x + 4) / 4] % 32 == 0;
+            return jeu[ligne - 1][colonne+1] % 32 == 0;//colonne sur laquelle le cube va faire une collision
           } else {
             return true;
           }
         }
       }
-    } else if (incl_cube == -1) {
+    } else if (incl_cube == -1) {//TODO
 
       if (pos_cube_x == 2) {
         ligne = (pos_cube_y - 1) / 3;
