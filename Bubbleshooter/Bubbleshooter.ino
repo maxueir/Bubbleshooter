@@ -72,6 +72,7 @@ void setup() {
   randomSeed(analogRead(0));
   matrix.begin();
   Serial.begin(9600);
+  Serial2.begin(9600);
   delay(1100);  // nécessaire pour que l'animation de lancement du jeu ne se fasse qu'une fois
   matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
   matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
@@ -82,8 +83,6 @@ void setup() {
   Timer3.attachInterrupt(deplacer_cube);
   Timer4.initialize(500000);  //clignote toutes les demi secondes
   Timer4.attachInterrupt(clignoter);
-  //init_anim(); // animation de lancement du jeu
-  //init_interface(); // initialise l'interface de jeu
   initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
@@ -1168,17 +1167,6 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
-  /*if(est_pause){
-    Serial.println("stop");
-    
-    Timer3.stop();
-    if(millis()-tps>1000){
-      est_pause=false;
-      Timer3.start();
-      Serial.println("plus stop");
-    }
-  }*/
-
   if (Serial.available() > 0) {
     
     char command = Serial.read();
@@ -1191,8 +1179,10 @@ void loop() {
       deplacer(0, 1);
     } else if (command == 'q') {
       deplacer(-1, 0);
+      Serial2.print("q");
     } else if (command == 'd') {
       deplacer(1, 0);
+      Serial2.print("d");
     } else if (command == 'z' && pret) {
       
       if (!deplacement) {
@@ -1215,6 +1205,5 @@ void loop() {
       }
     }
     //interrupts();
-  
   }
 }

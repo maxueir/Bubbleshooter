@@ -24,7 +24,7 @@ volatile int level = 1;
 void setup() {
   matrix.begin();
   Serial.begin(9600);
-  Serial1.begin(9600); // Initialise la communication série
+  Serial2.begin(9600); // Initialise la communication série
   delay(1100);
   //init_anim(); // animation de lancement du jeu
   init_interface(); // initialise l'interface de jeu
@@ -141,7 +141,7 @@ void maj_score() {
 }
 
 void choix_difficulte() {
-  matrix.fillRect(2 + (7 * 5), 2, 8 * (level + 1), 7, matrix.Color333(0, 0, 0));
+  matrix.fillRect(2 + (7 * 5), 2, 8 * 3, 7, matrix.Color333(0, 0, 0));
   if (level==0) {
     matrix.fillRect(2 + (7 * 5), 2, 8 * (level + 1), 7, matrix.Color333(0, 7, 0));
   }
@@ -154,8 +154,8 @@ void choix_difficulte() {
 }
 
 void loop() {
-  if (Serial1.available() > 0) { // vrai si o a reçu un caractère sur la liaison série
-    String info = Serial1.readString(); // met dans lu le caractère lu
+  if (Serial2.available() > 0) { // vrai si o a reçu un caractère sur la liaison série
+    String info = Serial2.readString(); // met dans lu le caractère lu
     Serial.print("Interface a reçu: ");
     Serial.println(info); // Affiche le message reçu
 
@@ -166,7 +166,6 @@ void loop() {
           break; // Sortir de la boucle
       }
     }
-
     if (isInt) {
       score = score + info.toInt();
       maj_score();
@@ -174,9 +173,11 @@ void loop() {
     else {
       if (info=="q" && level>0) {
         level--;
+        choix_difficulte();
       }
       else if (info=="d" && level<2) {
         level++;
+        choix_difficulte();
       }
     }
   }
