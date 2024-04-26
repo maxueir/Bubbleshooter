@@ -107,11 +107,6 @@ void transmettre_score() {  //envoyer le score obtenu a l'autre matrice
     }
 
     //transmission du "score"
-<<<<<<< HEAD
-=======
-    //String aux=String(score);
-    Serial.println(score);
->>>>>>> de965bd76d2c4d103f6489591b607592b6f611ee
     Serial2.print(score);
 
     nb_eclates = 0;
@@ -1228,10 +1223,6 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
-<<<<<<< HEAD
-=======
-  
->>>>>>> de965bd76d2c4d103f6489591b607592b6f611ee
   if (Serial.available() > 0) {
 
     char command = Serial.read();
@@ -1244,7 +1235,7 @@ void loop() {
         Serial2.print('d');
       } else if (command == ' ') {
         initialisation_jeu();
-        Serial2.print(" ");
+        Serial2.print(' ');
       }
     } 
     else {
@@ -1257,6 +1248,7 @@ void loop() {
       } else if (command == 'd') {
         deplacer(1, 0);
       } else if (command == 'z' && pret && !deplacement) {
+        Serial2.println('z');
         pret = false;
         deplacement = true;
         incl_cube = incl;

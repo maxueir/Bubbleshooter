@@ -1,3 +1,4 @@
+#include <TimerFour.h>
 #include <TimerThree.h>
 #include <DFRobot_RGBMatrix.h>  // Hardware-specific library
 #include <gamma.h>
@@ -23,7 +24,9 @@ color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), ma
 
 
 volatile int level = 1;
+volatile int coup_restant;
 
+bool essai_visible = true;
 volatile bool jeu_demarrer = false;
 
 String score = "0";  // score
@@ -41,7 +44,8 @@ void setup() {
   init_interface(); // initialise l'interface de jeu
   Timer3.initialize(25000);
   Timer3.attachInterrupt(maj_score);
-  //Timer3.attachInterrupt(deplacer_cube);
+  /*Timer4.initialize(500000);  //clignote toutes les demi secondes
+  Timer4.attachInterrupt(dernierEssai);*/
 }
 
 void init_anim() {
@@ -137,16 +141,22 @@ void maj_score() {
   if (ajout_score.toInt()>0) {
     score_temp = String(score.toInt() + 10);
     ajout_score_temp = String(ajout_score.toInt() - 10);
-    Serial.print("score = ");
+    /*Serial.print("score = ");
     Serial.println(score);
     Serial.print("score_temp = ");
     Serial.println(score_temp);
     Serial.print("ajout_score = ");
     Serial.println(ajout_score);
     Serial.print("ajout_score_temp = ");
-    Serial.println(ajout_score_temp);
+    Serial.println(ajout_score_temp);*/
     int j = 0;
     for (int i = 0; i < ajout_score_temp.length(); i++) {
+      /*Serial.print("i = ");
+      Serial.println(i);
+      Serial.print("ajout_score = ");
+      Serial.println(ajout_score[i]);
+      Serial.print("ajout_score_temp = ");
+      Serial.println(ajout_score_temp[i]);*/
       if (ajout_score[i] != ajout_score_temp[i]) {
         matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
         matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score_temp[ajout_score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
@@ -157,6 +167,12 @@ void maj_score() {
     matrix.drawChar(matrix.width() - (7*(j+2)), (matrix.height() / 2) -6, '+', matrix.Color333(0, 0, 0), 0, 1);
     matrix.drawChar(matrix.width() - (7*(j+1)), (matrix.height() / 2) -6, '+', matrix.Color333(255, 0, 0), 0, 1);
     for (int i = 0; i < score_temp.length(); i++) {
+      /*Serial.print("i = ");
+      Serial.println(i);
+      Serial.print("score = ");
+      Serial.println(score[i]);
+      Serial.print("score_temp = ");
+      Serial.println(score_temp[i]);*/
       if (score[i] != score_temp[i]) {
         matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) + 4, score[score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
         matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) + 4, score_temp[score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
@@ -180,29 +196,47 @@ void choix_difficulte() {
   }
 }
 
-void creer_file(){
+void nb_essai() {
+  Serial.println(coup_restant);
+  if (jeu_demarrer && coup_restant>1) {
+      matrix.drawChar(1, 25, coup_restant, matrix.Color333(0, 0, 0), 0, 2);
+      matrix.drawChar(1, 25, coup_restant, matrix.Color333(255, 0, 0), 0, 2);
+  }
+}
 
+void dernierEssai() {
+  if (coup_restant == 1) {
+      matrix.drawChar(1, 25, coup_restant, matrix.Color333(0, 0, 0), 0, 2);
+      matrix.drawChar(1, 25, coup_restant, matrix.Color333(255, 0, 0), 0, 2);
+      essai_visible = !essai_visible;
+  }
+}
+
+void creer_file(){
   for(int i=0;i<5;i++){
     file_couleurs[i]=random(1,nb_couleur);//creation de la file
-    matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, file_couleurs[i]);// affichage des carré à venir
+    matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, couleurs[file_couleurs[i]]);// affichage des carré à venir
   }
-
   // fleche
   matrix.drawLine(4, matrix.height() - 6, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
   matrix.drawLine(28 - 3, matrix.height() - 6 - 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
   matrix.drawLine(28 - 3, matrix.height() - 6 + 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
+  Serial2.println(file_couleurs[0]); // envoi de la couleur de la 1ere bille
+  /*for(int i=0;i<5;i++){
+    Serial.println(file_couleurs[i]);
+  }*/
 }
 
 int pop(){
-  int res=file_couleurs[0];
+  int res=file_couleurs[1];
   for(int i=0;i<5;i++){
     if(i==4){
       file_couleurs[i]=random(1,nb_couleur);//update de la file
-      matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, file_couleurs[i]);// affichage des carré à venir
+      matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, couleurs[file_couleurs[i]]);// affichage des carré à venir
     }
     else{
       file_couleurs[i]=file_couleurs[i+1];//update de la file
-      matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, file_couleurs[i]);// affichage des carré à venir
+      matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, couleurs[file_couleurs[i]]);// affichage des carré à venir
     }
     
   }
@@ -218,11 +252,11 @@ void loop() {
     Serial.print("Interface a reçu: ");
     Serial.println(transmit); // Affiche le message reçu
 
-    if (transmit[0] == " ") {
-      jeu_demarrer = true;
-    }
-    else if (transmit[0] == "z") {
+    if (transmit == "z") {
       Serial2.print(pop());
+      coup_restant--;
+      Serial.println(coup_restant);
+      nb_essai();
     }
     else {
       bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
@@ -250,8 +284,10 @@ void loop() {
       level++;
       choix_difficulte();
     }
-    else if (transmit ==' ') {
+    else if (transmit == ' ') {
       jeu_demarrer = !jeu_demarrer;
+      coup_restant = 4 - level;
+      creer_file();
     }
   }
 }
