@@ -1187,7 +1187,7 @@ void loop() {
       deplacer(0, -1);
     } else if (transmit == "e") {
       deplacer(0, 1);
-    } else if (transmit == "q") {
+    } else if (transmit[0] == "q") {
       deplacer(-1, 0);
       if (!en_jeu) {
         Serial2.print("q");
