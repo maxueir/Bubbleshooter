@@ -87,7 +87,7 @@ void setup() {
   Timer3.attachInterrupt(deplacer_cube);
   Timer4.initialize(500000);  //clignote toutes les demi secondes
   Timer4.attachInterrupt(clignoter);
-  initialisation_jeu();
+  //initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
   //afficher_jeu();
@@ -109,9 +109,9 @@ void transmettre_score(){//envoyer le score obtenu a l'autre matrice
       }
     }
 
-
-    //transmission du "score" ICI
-
+    //transmission du "score"
+    Serial.println(score);
+    Serial2.print(String(score));
 
     nb_eclates=0;
     score=0;
@@ -1235,31 +1235,28 @@ void loop() {
     
     char command = Serial.read();
     Serial.println(command);
-    //Serial.println(pret);
-
-    //noInterrupts();
-    if (command == 'a') {
-      deplacer(0, -1);
-      if (en_jeu) {
-        Serial2.print("500");
-      }
-    } else if (command == 'e') {
-      deplacer(0, 1);
-    } else if (command == 'q') {
-      deplacer(-1, 0);
-      if (!en_jeu) {
+    
+    if (!en_jeu) {
+      if (command == 'q') {
         Serial2.print('q');
-      }
-    } else if (command == 'd') {
-      deplacer(1, 0);
-      if (!en_jeu) {
+      } else if (command == 'd') {
         Serial2.print('d');
+      } else if (command == ' ') {
+        initialisation_jeu();
+        Serial2.print(" ");
       }
-    } else if (command == ' ' && !en_jeu) {
-      //initialisation_jeu();
-      Serial2.print(" ");
-    } else if (command == 'z' && pret) {
-      if (!deplacement) {
+    } 
+    else {
+      //Serial.println(pret);
+      if (command == 'a') {
+        deplacer(0, -1);
+      } else if (command == 'e') {
+        deplacer(0, 1);
+      } else if (command == 'q') {
+        deplacer(-1, 0);
+      } else if (command == 'd') {
+        deplacer(1, 0);
+      } else if (command == 'z' && pret && !deplacement) {
         pret=false;
         deplacement = true;
         incl_cube = incl;
@@ -1278,6 +1275,5 @@ void loop() {
         }
       }
     }
-    //interrupts();
   }
 }
