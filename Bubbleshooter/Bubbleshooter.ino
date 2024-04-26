@@ -53,6 +53,10 @@ volatile uint8_t file_x[255];
 volatile uint8_t file_y[255];
 volatile uint8_t taille = 0;  //taille du paquet de retour
 
+volatile uint8_t taille2 = 0;//taille du nb de billes a faire clignoter a la fin
+volatile uint8_t fin_clignoter[15];  //numero de couleur
+volatile uint8_t fin_x[15];  //x de la bille a clignoter
+
 volatile uint8_t jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
 //volatile bool visite[17][15];//18 où la 18eme => partie perdue
 
@@ -90,7 +94,7 @@ void setup() {
 
 void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'explosent
 //Serial.println(clignote);
-  if (clignote != 0) {
+  if (clignote != 0 && en_jeu) {
     if(clignote<5){
 
       for (int k = 0; k < taille; k++) {
@@ -167,6 +171,19 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     }
 
   }
+  }
+  else if(!en_jeu){
+    
+    for(int k=0;k<taille2;k++){
+      //volatile uint8_t fin_clignoter[15];  //numero de couleur
+      //volatile uint8_t fin_x[15];
+      int j=fin_x[k];
+      //file_x se transforme en couleurs[15]
+      matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + 17 * 3, 3, 3, couleurs[fin_clignoter[k] * (1 - (clignote % 2))]);
+        
+
+    }
+    clignote++;
   }
 }
 
@@ -438,8 +455,10 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
             matrix.fillRect(marge_g + i * 3 + 2 + i, en_tete + 17 * 3, 3, 3, couleurs[jeu[17 - taille_descente][i]%32]);
             }
     }*/
-    for (int i = 16; i >= 0; i--) {
-      for (int j = 14; j >= 0; j--) {
+    //taille=0;
+    for (int i = 17; i >= 0; i--) {
+      //for (int j = 14; j >= 0; j--) {
+        for (int j = 0; j<15; j++) {
         if (i < taille_descente) {
           if (jeu[i][j] >= 32) {
             jeu[i][j] = 32 + random(1, nb_couleur);
@@ -450,6 +469,14 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
           if (i == 17) {
             if (jeu[i - taille_descente][j] % 32 != 0) {
               verif = false;
+              //file_x[taille]=jeu[i - taille_descente][j] % 32;
+              //res_x[taille]=j;
+              //res_y[taille]=i;
+              //taille++;
+              
+              fin_x[taille2]=j;
+              fin_clignoter[taille2]=jeu[i - taille_descente][j] % 32;
+              taille2++;
               matrix.fillRect(marge_g + j * 3 + 2 + j, en_tete + i * 3, 3, 3, couleurs[jeu[i - taille_descente][j] % 32]);
             }
           } else {
@@ -518,6 +545,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
 
   void initialisation_jeu() {
     //randomSeed(analogRead(0));
+    taille=0;
     en_jeu=true;
     matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
     matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
@@ -1018,6 +1046,9 @@ void deplacer_cube() {
     } else if (deplacement) {
       deplacement = false;
       if (ligne == 17) {
+        taille2=1;
+        fin_clignoter[0]=couleur_cube;
+
         if (incl_cube == 0) {  //effacage du cube mal positionné
           matrix.fillRect(pos_cube_x, pos_cube_y - 2, 3, 3, couleurs[0]);
         } else if (incl_cube == -1) {
@@ -1045,6 +1076,8 @@ void deplacer_cube() {
           }
         }
         matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[couleur_cube]);//repositionnement du cube
+        fin_x[0]=colonne;
+        
         couleur_cube = random(1, nb_couleur);
         if (incl == 0) {
           //pos_cube_x = pos;
