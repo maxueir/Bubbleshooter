@@ -41,6 +41,7 @@ volatile uint8_t colonne = 0;
 volatile uint8_t clignote = 0;  //0=> eteint 1=> allume
 
 volatile int score = 0;  // score
+volatile uint8_t nb_eclates = 0;
 
 volatile uint8_t pos_cube_x = 0;    //position de la boule en bas a gauche en x
 volatile uint8_t pos_cube_y = 0;    //position de la boule en bas a gauche en y
@@ -86,10 +87,35 @@ void setup() {
   Timer3.attachInterrupt(deplacer_cube);
   Timer4.initialize(500000);  //clignote toutes les demi secondes
   Timer4.attachInterrupt(clignoter);
-  //initialisation_jeu();
+  initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
   //afficher_jeu();
+}
+void transmettre_score(){//envoyer le score obtenu a l'autre matrice
+  if(nb_eclates!=0){
+    for(int i=0;i<nb_eclates;i++){
+      if(i+1<4){
+        score=score+10;
+      }
+      else if(i+1<6){
+        score=score+20;
+      }
+      else if(i+1<8){
+        score=score+30;
+      }
+      else {
+        score=score+40;
+      }
+    }
+
+
+    //transmission du "score" ICI
+
+
+    nb_eclates=0;
+    score=0;
+  }
 }
 
 void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'explosent
@@ -120,7 +146,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     
     if (clignote == 4) {
       clignote=0;
-      boules_isolees(true);
+      boules_isolees();
     }
   }
   else{
@@ -260,7 +286,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
   }
 
 
-  void boules_isolees(bool b) {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
+  void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
 
     
     //bool valides[17][15];//normalement ici; visite doit etre remplacé par valides mais pour manque de place (bug de matrice), on reutilise visite qui est lui aussi un tableau de bool
@@ -366,6 +392,8 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
         }
       }
     }
+    nb_eclates=nb_eclates+taille;
+    transmettre_score();
 
     
     
@@ -491,7 +519,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
       }
     }
     afficher_jeu();
-    boules_isolees(false);
+    boules_isolees();
 
 
     if (!verif) {
@@ -547,6 +575,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     //randomSeed(analogRead(0));
     taille=0;
     en_jeu=true;
+    pret=true;
     matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
     matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
     deplacer(1, 0);                //permet d'afficher le canon
@@ -914,6 +943,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     }
 
     if (taille > 2) {
+      nb_eclates=nb_eclates+taille;
       clignote = 1;
       /*for (int k = 0; k < taille; k++) {
       //PaireInt pop = res[k];
@@ -1204,6 +1234,7 @@ void loop() {
     
     char command = Serial.read();
     Serial.println(command);
+<<<<<<< HEAD
     
     if (!en_jeu) {
       if (command == 'q') {
@@ -1225,6 +1256,33 @@ void loop() {
       } else if (command == 'd') {
         deplacer(1, 0);
       } else if (command == 'z' && pret && !deplacement) {
+=======
+    //Serial.println(pret);
+
+    //noInterrupts();
+    if (command == 'a') {
+      deplacer(0, -1);
+      if (en_jeu) {
+        Serial2.print("500");
+      }
+    } else if (command == 'e') {
+      deplacer(0, 1);
+    } else if (command == 'q') {
+      deplacer(-1, 0);
+      if (!en_jeu) {
+        Serial2.print('q');
+      }
+    } else if (command == 'd') {
+      deplacer(1, 0);
+      if (!en_jeu) {
+        Serial2.print('d');
+      }
+    } else if (command == ' ' && !en_jeu) {
+      //initialisation_jeu();
+      Serial2.print(" ");
+    } else if (command == 'z' && pret) {
+      if (!deplacement) {
+>>>>>>> 479b67c3096a96a1e2546bf9f1d1f01eb581d520
         pret=false;
         deplacement = true;
         incl_cube = incl;
