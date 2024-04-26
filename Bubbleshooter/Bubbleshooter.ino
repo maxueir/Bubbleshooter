@@ -32,6 +32,8 @@ uint8_t nb_tirs = 4;                   //nb de tirs avant que ca descende
 volatile uint8_t numero_tir = 0;       //indique combien de tir on a tiré (pour descendre en fonction)
 volatile uint8_t taille_descente = 1;  //indique de combien on descent par descente
 
+uint8_t difficulte=1; 
+
 volatile uint8_t pos = 30;  //position de la fleche d'envoi en x
 volatile int incl = 0;      //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 
@@ -47,6 +49,8 @@ volatile uint8_t pos_cube_x = 0;    //position de la boule en bas a gauche en x
 volatile uint8_t pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = 0;         //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
 volatile uint8_t couleur_cube = 1;  //indice de la couleur utilisee dans le tableau couleurs
+uint8_t prochaine_couleur = 50;//prochaine couleur
+uint8_t prochaine_couleur2 = 50;//prochaine couleur
 
 volatile uint8_t res_x[255];
 volatile uint8_t res_y[255];
@@ -87,6 +91,7 @@ void setup() {
   Timer3.attachInterrupt(deplacer_cube);
   Timer4.initialize(500000);  //clignote toutes les demi secondes
   Timer4.attachInterrupt(clignoter);
+  debut_bubble();
   //initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
@@ -107,6 +112,8 @@ void transmettre_score() {  //envoyer le score obtenu a l'autre matrice
     }
 
     //transmission du "score"
+    //String aux=String(score);
+    Serial.println(score);
     Serial2.print(score);
 
     nb_eclates = 0;
@@ -564,8 +571,44 @@ void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
   }
 }
 
+void debut_bubble(){
+  matrix.fillRect(0, 0, 63, 63, couleurs[0]);
+  // ecriture de "press space to play"
+  int x_letter=15;
+  int y_letter=15;
+  matrix.drawChar(x_letter, y_letter, 'P', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + 7, y_letter, 'r', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + (7 * 2), y_letter, 'e', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + (7 * 3), y_letter, 's', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + (7 * 4), y_letter, 's', matrix.Color333(255, 255, 255), 0, 1);
+
+  matrix.drawChar(x_letter, y_letter +9, 's', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + 7, y_letter+9, 'p', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + (7 * 2), y_letter+9, 'a', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + (7 * 3), y_letter+9, 'c', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + (7 * 4), y_letter+9, 'e', matrix.Color333(255, 255, 255), 0, 1);
+
+  matrix.drawChar(x_letter+10, y_letter+18, 't', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter + 17, y_letter+18, 'o', matrix.Color333(255, 255, 255), 0, 1);
+
+  matrix.drawChar(x_letter+3, y_letter+27, 'p', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter  +10, y_letter+27, 'l', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter +3+ (7 * 2), y_letter+27, 'a', matrix.Color333(255, 255, 255), 0, 1);
+  matrix.drawChar(x_letter +3+ (7 * 3), y_letter+27, 'y', matrix.Color333(255, 255, 255), 0, 1);
+}
+
 void initialisation_jeu() {
   //randomSeed(analogRead(0));
+  matrix.fillRect(0, 0, 63, 63, couleurs[0]);
+  if(difficulte==0){
+    nb_tirs = 4;      
+  }
+  else if(difficulte==1){
+    nb_tirs = 3;      
+  }
+  else{
+    nb_tirs = 2;      
+  }
   taille = 0;
   en_jeu = true;
   pret = true;
@@ -1223,6 +1266,25 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
+  if (Serial2.available() > 0) {
+    char a=(Serial2.read());
+    Serial.println("a");
+    Serial.println(a);
+    Serial.println(a-48);
+
+    if(prochaine_couleur==50){
+      prochaine_couleur = a-48;
+    }
+    else{
+      prochaine_couleur = prochaine_couleur2;
+      prochaine_couleur2 = a-48;
+    }
+    Serial.println(prochaine_couleur);
+    Serial.println(prochaine_couleur2);
+
+    Serial.println("prochaine_couleur");
+    Serial.println(prochaine_couleur);
+    }
   if (Serial.available() > 0) {
 
     char command = Serial.read();
@@ -1231,8 +1293,14 @@ void loop() {
     if (!en_jeu) {
       if (command == 'q') {
         Serial2.print('q');
+        if(difficulte!=0){
+          difficulte--;
+        }
       } else if (command == 'd') {
         Serial2.print('d');
+        if(difficulte!=2){
+          difficulte++;
+        }
       } else if (command == ' ') {
         initialisation_jeu();
         Serial2.print(' ');
@@ -1248,7 +1316,7 @@ void loop() {
       } else if (command == 'd') {
         deplacer(1, 0);
       } else if (command == 'z' && pret && !deplacement) {
-        Serial2.println('z');
+        Serial2.print('z');
         pret = false;
         deplacement = true;
         incl_cube = incl;
