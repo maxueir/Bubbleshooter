@@ -155,6 +155,7 @@ void maj_score() {
       }
     }
     score = score_temp;
+    ajout_score = ajout_score_temp;
   }
 }
 
