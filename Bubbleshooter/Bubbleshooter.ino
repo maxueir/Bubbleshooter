@@ -107,8 +107,9 @@ void transmettre_score() {  //envoyer le score obtenu a l'autre matrice
     }
 
     //transmission du "score"
+    //String aux=String(score);
     Serial.println(score);
-    Serial2.print(String(score));
+    Serial2.print(score);
 
     nb_eclates = 0;
     score = 0;
@@ -167,6 +168,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
       clignote++;
       if (clignote == 8) {
         pret = true;
+        Serial.print("ROI");
         couleur_cube = random(1, nb_couleur);  //re-armer le canon
         if (incl == 0) {
           //pos_cube_x = pos;
@@ -395,6 +397,7 @@ void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille es
     }
   } else {
     pret = true;
+    Serial.println("DAME");
     couleur_cube = random(1, nb_couleur);  //re-armer le canon
     if (incl == 0) {
       //pos_cube_x = pos;
@@ -569,6 +572,7 @@ void initialisation_jeu() {
   en_jeu = true;
   pret = true;
   clignote=0;
+  couleur_cube=random(1,nb_couleur);
   matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
   matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
   deplacer(1, 0);                //permet d'afficher le canon
@@ -978,6 +982,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 
     } else {
       pret = true;
+      Serial.println("FOU");
       couleur_cube = random(1, nb_couleur);  //re-armer le canon
       if (incl == 0) {
         //pos_cube_x = pos;
@@ -1100,7 +1105,8 @@ void deplacer_cube() {
         matrix.fillRect(marge_g + colonne * 3 + 2 + colonne, en_tete + ligne * 3, 3, 3, couleurs[couleur_cube]);  //repositionnement du cube
         fin_x[0] = colonne;
 
-        couleur_cube = random(1, nb_couleur);
+        Serial.println("CAVALIER");
+        couleur_cube = random(1, nb_couleur);//re armer le canon
         if (incl == 0) {
           //pos_cube_x = pos;
           //pos_cube_y = 63 - hauteur - 5;
@@ -1219,7 +1225,7 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
-  Serial.println(pret);
+  
   if (Serial.available() > 0) {
 
     char command = Serial.read();
