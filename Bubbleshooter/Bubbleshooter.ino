@@ -1230,6 +1230,7 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
+  Serial.println(pret);
   if (Serial.available() > 0) {
     
     char command = Serial.read();
@@ -1246,7 +1247,6 @@ void loop() {
       }
     } 
     else {
-      //Serial.println(pret);
       if (command == 'a') {
         deplacer(0, -1);
       } else if (command == 'e') {
