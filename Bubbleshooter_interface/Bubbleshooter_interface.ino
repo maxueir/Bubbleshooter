@@ -24,7 +24,7 @@ color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), ma
 
 volatile int level = 1;
 
-volatile bool en_jeu = false;
+volatile bool jeu_demarrer = false;
 
 String score = "0";  // score
 String score_temp = "0"; // score temporaire servant à la gestion de l'affichage du score
@@ -205,13 +205,13 @@ int pop(){
 
 
 void loop() {
-  if (Serial2.available() > 0 && en_jeu) { // vrai si o a reçu un caractère sur la liaison série
+  if (Serial2.available() > 0 && jeu_demarrer) { // vrai si o a reçu un caractère sur la liaison série
     String transmit = Serial2.readString(); // met dans lu le caractère lu
     Serial.print("Interface a reçu: ");
     Serial.println(transmit); // Affiche le message reçu
 
     if (transmit[0] == " ") {
-      en_jeu = !en_jeu;
+      jeu_demarrer = true;
     }
     else {
       bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
@@ -226,7 +226,7 @@ void loop() {
       }
     }
   }    
-  else if (Serial2.available() > 0 && !en_jeu) { // vrai si o a reçu un caractère sur la liaison série
+  else if (Serial2.available() > 0 && !jeu_demarrer) { // vrai si o a reçu un caractère sur la liaison série
     char transmit = Serial2.read(); // met dans lu le caractère lu
     Serial.print("Interface a reçu: ");
     Serial.println(transmit); // Affiche le message reçu
@@ -240,7 +240,7 @@ void loop() {
       choix_difficulte();
     }
     else if (transmit ==' ') {
-      en_jeu = !en_jeu;
+      jeu_demarrer = !jeu_demarrer;
     }
   }
 }
