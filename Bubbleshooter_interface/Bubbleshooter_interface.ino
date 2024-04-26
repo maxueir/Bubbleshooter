@@ -22,6 +22,8 @@ uint8_t nb_tirs = 4;          //nb de tirs avant que ca descende
 volatile long score = 77777;  // score
 volatile int level = 1;
 
+volatile bool en_jeu = false;
+
 void setup() {
   matrix.begin();
   Serial.begin(9600);
@@ -159,31 +161,43 @@ void choix_difficulte() {
 }
 
 void loop() {
-  if (Serial2.available() > 0) { // vrai si o a reçu un caractère sur la liaison série
+  if (Serial2.available() > 0 && en_jeu) { // vrai si o a reçu un caractère sur la liaison série
     String transmit = Serial2.readString(); // met dans lu le caractère lu
     Serial.print("Interface a reçu: ");
     Serial.println(transmit); // Affiche le message reçu
 
-    bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
-    for (int i = 0; i < transmit.length(); i++) {
-      if (!isdigit(transmit[i])) { // Si un caractère n'est pas un chiffre
-          isInt = false; // La chaîne n'est pas un entier
-          break; // Sortir de la boucle
-      }
-    }
-    if (isInt) {
-      score = score + transmit.toInt();
-      maj_score();
+    if (transmit[0] == " ") {
+      en_jeu = !en_jeu;
     }
     else {
-      if (transmit=="q" && level>0) {
-        level--;
-        choix_difficulte();
+      bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
+      for (int i = 0; i < transmit.length(); i++) {
+        if (!isdigit(transmit[i])) { // Si un caractère n'est pas un chiffre
+            isInt = false; // La chaîne n'est pas un entier
+            break; // Sortir de la boucle
+        }
       }
-      else if (transmit=="d" && level<2) {
-        level++;
-        choix_difficulte();
+      if (isInt) {
+        score = score + transmit.toInt();
+        maj_score();
       }
+    }
+  }    
+  else if (Serial2.available() > 0 && !en_jeu) { // vrai si o a reçu un caractère sur la liaison série
+    char transmit = Serial2.read(); // met dans lu le caractère lu
+    Serial.print("Interface a reçu: ");
+    Serial.println(transmit); // Affiche le message reçu
+
+    if (transmit=='q' && level>0) {
+      level--;
+      choix_difficulte();
+    }
+    else if (transmit=='d' && level<2) {
+      level++;
+      choix_difficulte();
+    }
+    else if (transmit ==' ') {
+      en_jeu = !en_jeu;
     }
   }
 }
