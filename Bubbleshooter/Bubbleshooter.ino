@@ -980,7 +980,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     numero_tir++;
     if (numero_tir == nb_tirs) {
       numero_tir = 0;
-      pret=false;//TODO
+      pret=false;
       descendre();
 
     }
@@ -1230,6 +1230,7 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
+  Serial.println(pret);
   if (Serial.available() > 0) {
     
     char command = Serial.read();
