@@ -107,8 +107,7 @@ void transmettre_score() {  //envoyer le score obtenu a l'autre matrice
     }
 
     //transmission du "score"
-    Serial.println(score);
-    Serial2.print(String(score));
+    Serial2.print(score);
 
     nb_eclates = 0;
     score = 0;
@@ -1219,7 +1218,6 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 }
 
 void loop() {
-  Serial.println(pret);
   if (Serial.available() > 0) {
 
     char command = Serial.read();
