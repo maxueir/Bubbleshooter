@@ -1234,8 +1234,8 @@ void loop() {
         initialisation_jeu();
         Serial2.print(" ");
       }
-    } else {
-      Serial.println(pret);
+    } 
+    else {
       if (command == 'a') {
         deplacer(0, -1);
       } else if (command == 'e') {
