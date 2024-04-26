@@ -197,10 +197,11 @@ void choix_difficulte() {
 }
 
 void nb_essai() {
-  Serial.println(coup_restant);
   if (jeu_demarrer && coup_restant>1) {
-      matrix.drawChar(1, 25, coup_restant, matrix.Color333(0, 0, 0), 0, 2);
-      matrix.drawChar(1, 25, coup_restant, matrix.Color333(255, 0, 0), 0, 2);
+    char nb = char(coup_restant);
+    Serial.println(nb);
+    matrix.drawChar(1, 25, nb, matrix.Color333(0, 0, 0), 0, 1);
+    matrix.drawChar(1, 25, nb, matrix.Color333(255, 0, 0), 0, 1);
   }
 }
 
