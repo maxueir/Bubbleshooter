@@ -41,6 +41,7 @@ volatile uint8_t colonne = 0;
 volatile uint8_t clignote = 0;  //0=> eteint 1=> allume
 
 volatile int score = 0;  // score
+volatile uint8_t nb_eclates = 0;
 
 volatile uint8_t pos_cube_x = 0;    //position de la boule en bas a gauche en x
 volatile uint8_t pos_cube_y = 0;    //position de la boule en bas a gauche en y
@@ -91,6 +92,31 @@ void setup() {
   //Serial.print("affichage");
   //afficher_jeu();
 }
+void transmettre_score(){//envoyer le score obtenu a l'autre matrice
+  if(nb_eclates!=0){
+    for(int i=0;i<nb_eclates;i++){
+      if(i+1<4){
+        score=score+10;
+      }
+      else if(i+1<6){
+        score=score+20;
+      }
+      else if(i+1<8){
+        score=score+30;
+      }
+      else {
+        score=score+40;
+      }
+    }
+
+
+    //transmission du "score" ICI
+
+
+    nb_eclates=0;
+    score=0;
+  }
+}
 
 void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'explosent
 //Serial.println(clignote);
@@ -120,7 +146,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     
     if (clignote == 4) {
       clignote=0;
-      boules_isolees(true);
+      boules_isolees();
     }
   }
   else{
@@ -260,7 +286,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
   }
 
 
-  void boules_isolees(bool b) {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
+  void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
 
     
     //bool valides[17][15];//normalement ici; visite doit etre remplacé par valides mais pour manque de place (bug de matrice), on reutilise visite qui est lui aussi un tableau de bool
@@ -366,6 +392,8 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
         }
       }
     }
+    nb_eclates=nb_eclates+taille;
+    transmettre_score();
 
     
     
@@ -491,7 +519,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
       }
     }
     afficher_jeu();
-    boules_isolees(false);
+    boules_isolees();
 
 
     if (!verif) {
@@ -914,6 +942,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     }
 
     if (taille > 2) {
+      nb_eclates=nb_eclates+taille;
       clignote = 1;
       /*for (int k = 0; k < taille; k++) {
       //PaireInt pop = res[k];
