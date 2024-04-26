@@ -1285,7 +1285,6 @@ void loop() {
     Serial.println("prochaine_couleur");
     Serial.println(prochaine_couleur);
     }
-  
   if (Serial.available() > 0) {
 
     char command = Serial.read();

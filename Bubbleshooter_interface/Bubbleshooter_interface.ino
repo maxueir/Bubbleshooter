@@ -135,9 +135,17 @@ void maj_score() {
   */
   // effacement du rectangle contenant l'affichage du score
   if (ajout_score.toInt()>0) {
-    int j = 0;
     score_temp = String(score.toInt() + 10);
     ajout_score_temp = String(ajout_score.toInt() - 10);
+    Serial.print("score = ");
+    Serial.println(score);
+    Serial.print("score_temp = ");
+    Serial.println(score_temp);
+    Serial.print("ajout_score = ");
+    Serial.println(ajout_score);
+    Serial.print("ajout_score_temp = ");
+    Serial.println(ajout_score_temp);
+    int j = 0;
     for (int i = 0; i < ajout_score_temp.length(); i++) {
       if (ajout_score[i] != ajout_score_temp[i]) {
         matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
@@ -146,8 +154,8 @@ void maj_score() {
       j++;
     }
     // signe "plus"
-    matrix.drawLine(matrix.width() - (7*(j+1)), (matrix.height() / 2) - 6, matrix.width() - (7*(j+1)), matrix.height() / 2, matrix.Color333(255, 0, 0));
-    matrix.drawLine(matrix.width() - (7*(j+1)) - 3, matrix.height() / 2 - 3, matrix.width() - (7*(j+1)) + 3, matrix.height() / 2 - 3, matrix.Color333(255, 0, 0));
+    matrix.drawChar(matrix.width() - (7*(j+2)), (matrix.height() / 2) -6, '+', matrix.Color333(0, 0, 0), 0, 1);
+    matrix.drawChar(matrix.width() - (7*(j+1)), (matrix.height() / 2) -6, '+', matrix.Color333(255, 0, 0), 0, 1);
     for (int i = 0; i < score_temp.length(); i++) {
       if (score[i] != score_temp[i]) {
         matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) + 4, score[score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
@@ -212,6 +220,9 @@ void loop() {
 
     if (transmit[0] == " ") {
       jeu_demarrer = true;
+    }
+    else if (transmit[0] == "z") {
+      Serial2.print(pop());
     }
     else {
       bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
