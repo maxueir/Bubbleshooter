@@ -87,7 +87,7 @@ void setup() {
   Timer3.attachInterrupt(deplacer_cube);
   Timer4.initialize(500000);  //clignote toutes les demi secondes
   Timer4.attachInterrupt(clignoter);
-  //initialisation_jeu();
+  initialisation_jeu();
   //delay(1000);
   //Serial.print("affichage");
   //afficher_jeu();
@@ -575,6 +575,7 @@ void clignoter() {  //permet de faire clignoter les billes avant qu'elles n'expl
     //randomSeed(analogRead(0));
     taille=0;
     en_jeu=true;
+    pret=true;
     matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
     matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
     deplacer(1, 0);                //permet d'afficher le canon
@@ -1233,6 +1234,7 @@ void loop() {
     
     char command = Serial.read();
     Serial.println(command);
+    //Serial.println(pret);
 
     //noInterrupts();
     if (command == 'a') {
@@ -1253,10 +1255,9 @@ void loop() {
         Serial2.print('d');
       }
     } else if (command == ' ' && !en_jeu) {
-      initialisation_jeu();
+      //initialisation_jeu();
       Serial2.print(" ");
     } else if (command == 'z' && pret) {
-      
       if (!deplacement) {
         pret=false;
         deplacement = true;

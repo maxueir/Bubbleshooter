@@ -17,7 +17,10 @@
 DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 
 uint8_t nb_couleur = 7;       //affiche nb_couleur - 1 dans le jeu
-uint8_t nb_tirs = 4;          //nb de tirs avant que ca descende
+volatile uint8_t file_couleurs[5];
+
+color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
+
 
 volatile long score = 77777;  // score
 volatile int level = 1;
@@ -25,6 +28,7 @@ volatile int level = 1;
 volatile bool en_jeu = false;
 
 void setup() {
+  randomSeed(analogRead(0));
   matrix.begin();
   Serial.begin(9600);
   Serial2.begin(9600); // Initialise la communication série
@@ -113,14 +117,8 @@ void init_interface() {
   choix_difficulte();
   // affichage du score
   maj_score();
-  // fleche
-  matrix.drawLine(4, matrix.height() - 6, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
-  matrix.drawLine(28 - 3, matrix.height() - 6 - 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
-  matrix.drawLine(28 - 3, matrix.height() - 6 + 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
-  // affichage des carré à venir
-  for (int i = 0; i < 5; i++) {
-    matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, matrix.Color333(255, 255, 0));
-  }
+  
+  
 }
 
 void maj_score() {
@@ -159,6 +157,38 @@ void choix_difficulte() {
     matrix.fillRect(2 + (7 * 5), 2, 8 * (level + 1), 7, matrix.Color333(7, 0, 0));
   }
 }
+
+void creer_file(){
+
+  for(int i=0;i<5;i++){
+    file_couleurs[i]=random(1,nb_couleur);//creation de la file
+    matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, file_couleurs[i]);// affichage des carré à venir
+  }
+
+  // fleche
+  matrix.drawLine(4, matrix.height() - 6, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
+  matrix.drawLine(28 - 3, matrix.height() - 6 - 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
+  matrix.drawLine(28 - 3, matrix.height() - 6 + 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
+}
+
+int pop(){
+  int res=file_couleurs[0];
+  for(int i=0;i<5;i++){
+    if(i==4){
+      file_couleurs[i]=random(1,nb_couleur);//update de la file
+      matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, file_couleurs[i]);// affichage des carré à venir
+    }
+    else{
+      file_couleurs[i]=file_couleurs[i+1];//update de la file
+      matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, file_couleurs[i]);// affichage des carré à venir
+    }
+    
+  }
+  
+
+  return res;
+}
+
 
 void loop() {
   if (Serial2.available() > 0 && en_jeu) { // vrai si o a reçu un caractère sur la liaison série
