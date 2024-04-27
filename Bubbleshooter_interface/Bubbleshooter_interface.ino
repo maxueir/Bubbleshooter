@@ -42,7 +42,7 @@ void setup() {
   delay(1100);
   //initAnim(); // animation de lancement du jeu
   initInterface(); // initialise l'interface de jeu
-  Timer3.initialize(75000);
+  Timer3.initialize(100000);
   Timer3.attachInterrupt(majScore);
   Timer4.initialize(500000);  //clignote toutes les demi secondes
   Timer4.attachInterrupt(dernierEssai);
@@ -151,6 +151,11 @@ void majScore() {
     Serial.print("ajout_score_temp = ");
     Serial.println(ajout_score_temp);*/
     int j = 0;
+    bool cond = false;
+    if (ajout_score.length()!=ajout_score_temp.length()) {
+      matrix.drawChar(matrix.width() - (7*ajout_score.length()), (matrix.height() / 2) - 6, ajout_score[0], matrix.Color333(0, 0, 0), 0, 1);
+      cond = true;
+    }
     for (int i = 0; i < ajout_score_temp.length(); i++) {
       /*Serial.print("i = ");
       Serial.println(i);
@@ -158,9 +163,17 @@ void majScore() {
       Serial.println(ajout_score[i]);
       Serial.print("ajout_score_temp = ");
       Serial.println(ajout_score_temp[i]);*/
-      if (ajout_score[i] != ajout_score_temp[i]) {
-        matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
-        matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score_temp[ajout_score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
+      if (cond) {
+        if (ajout_score[i+1] != ajout_score_temp[i]) {
+          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
+          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score_temp[ajout_score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
+        }
+      } 
+      else {
+        if (ajout_score[i] != ajout_score_temp[i]) {
+          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
+          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score_temp[ajout_score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
+        }
       }
       j++;
     }
@@ -296,11 +309,10 @@ void loop() {
         }
       }
       if (isInt) {
-        Serial.println("nouveau score");
         ajout_score = transmit;
       }
     }
-  }    
+  }
   else if (Serial2.available() > 0 && !jeu_demarrer) { // vrai si o a reçu un caractère sur la liaison série
     char transmit = Serial2.read(); // met dans lu le caractère lu
     Serial.print("Interface a reçu: ");
