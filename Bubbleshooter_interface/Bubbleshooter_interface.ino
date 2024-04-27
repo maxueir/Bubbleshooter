@@ -40,15 +40,15 @@ void setup() {
   Serial.begin(9600);
   Serial2.begin(9600); // Initialise la communication série
   delay(1100);
-  //init_anim(); // animation de lancement du jeu
-  init_interface(); // initialise l'interface de jeu
-  Timer3.initialize(25000);
-  Timer3.attachInterrupt(maj_score);
+  //initAnim(); // animation de lancement du jeu
+  initInterface(); // initialise l'interface de jeu
+  Timer3.initialize(75000);
+  Timer3.attachInterrupt(majScore);
   Timer4.initialize(500000);  //clignote toutes les demi secondes
   Timer4.attachInterrupt(dernierEssai);
 }
 
-void init_anim() {
+void initAnim() {
   static int x_letter = (matrix.width() / 2) - 3;
   static int y_letter = (matrix.height() / 2) - 3;
 
@@ -108,7 +108,7 @@ void init_anim() {
   }
 }
 
-void init_interface() {
+void initInterface() {
   static int x_letter = 2;
   static int y_letter = 2;
 
@@ -123,14 +123,15 @@ void init_interface() {
   matrix.drawChar(x_letter + (7 * 3), y_letter, 'e', matrix.Color333(255, 0, 0), 0, 1);
   matrix.drawChar(x_letter + (7 * 4), y_letter, 'l', matrix.Color333(255, 0, 0), 0, 1);
   // affichage du niveau de difficulté sélectionné
-  choix_difficulte();
+  choixDifficulte();
   // affichage du score
-  maj_score();
+  matrix.drawChar(matrix.width() - 7, (matrix.height() / 2) + 4, '0', matrix.Color333(255, 0, 0), 0, 1);
+  majScore();
   
   
 }
 
-void maj_score() {
+void majScore() {
   /* convertir int en string en optimisant la mémoire
   int num = 12;
   char buf[10]; // Buffer pour la chaîne de caractères
@@ -183,7 +184,7 @@ void maj_score() {
   }
 }
 
-void choix_difficulte() {
+void choixDifficulte() {
   matrix.fillRect(2 + (7 * 5), 2, 8 * 3, 7, matrix.Color333(0, 0, 0));
   if (level==0) {
     matrix.fillRect(2 + (7 * 5), 2, 8 * (level + 1), 7, matrix.Color333(0, 7, 0));
@@ -196,61 +197,37 @@ void choix_difficulte() {
   }
 }
 
-void nb_essai() {
+void nbEssai() {
   String nb = String(coup_restant);
   if (jeu_demarrer && coup_restant>1) {
     matrix.drawChar(3, 25, nb[0], matrix.Color333(0, 0, 0), 0, 1);
-    coup_restant--;
     nb = String(coup_restant);
     matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1);
     if (coup_restant == 1) {
       essai_visible = true;
     }
   }
-  else if (jeu_demarrer && coup_restant==1) {
+  else if (jeu_demarrer && coup_restant==0) {
     matrix.drawChar(3, 25, nb[0], matrix.Color333(0, 0, 0), 0, 1);
     coup_restant = 4 - level;
     nb = String(coup_restant);
     matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1);
   }
-  Serial.print("coup_restant ");
-  Serial.println(coup_restant);
-  /*
-  if (jeu_demarrer && coup_restant>1) {
-    Serial.println(nb);
-    matrix.drawChar(3, 25, nb[0], matrix.Color333(0, 0, 0), 0, 1);
-    coup_restant--;
-    nb = String(coup_restant);
-    matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1);
-    if (coup_restant == 1) {
-      essai_visible = true;
-    }
-  }
-  else if (jeu_demarrer && coup_restant==1) {
-    Serial.println(nb);
-    matrix.drawChar(3, 25, nb[0], matrix.Color333(0, 0, 0), 0, 1);
-    coup_restant = 4 - level;
-    nb = String(coup_restant);
-    matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1);
-  }
-  */
 }
 
 void dernierEssai() {
   if (coup_restant == 1 && essai_visible) {
-    String nb = String(coup_restant);
-    matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1);
+    matrix.drawChar(3, 25, '1', matrix.Color333(255, 0, 0), 0, 1);
     essai_visible = !essai_visible;
   }
   else if (coup_restant == 1 && !essai_visible) {
-    String nb = String(coup_restant);
-    matrix.drawChar(3, 25, nb[0], matrix.Color333(0, 0, 0), 0, 1);
+    matrix.drawChar(3, 25, '1', matrix.Color333(0, 0, 0), 0, 1);
     essai_visible = !essai_visible;
   }
 
 }
 
-void creer_file(){
+void creerFile(){
   for(int i=0;i<5;i++){
     file_couleurs[i]=random(1,nb_couleur);//creation de la file
     matrix.fillRect(35 + (5 * i), matrix.height() - 7, 3, 3, couleurs[file_couleurs[i]]);// affichage des carré à venir
@@ -259,7 +236,7 @@ void creer_file(){
   matrix.drawLine(4, matrix.height() - 6, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
   matrix.drawLine(28 - 3, matrix.height() - 6 - 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
   matrix.drawLine(28 - 3, matrix.height() - 6 + 3, 28, matrix.height() - 6, matrix.Color333(7, 7, 0));
-  Serial2.println(file_couleurs[0]); // envoi de la couleur de la 1ere bille
+  Serial2.print(file_couleurs[0]); // envoi de la couleur de la 1ere bille
   /*for(int i=0;i<5;i++){
     Serial.println(file_couleurs[i]);
   }*/
@@ -278,8 +255,6 @@ int pop(){
     }
     
   }
-  
-
   return res;
 }
 
@@ -290,9 +265,14 @@ void loop() {
     Serial.print("Interface a reçu: ");
     Serial.println(transmit); // Affiche le message reçu
 
-    if (transmit == "z") {
-      Serial2.print(pop());
-      nb_essai();
+    if (transmit[0] == 'z') {
+      Serial2.print(pop()); // envoi de la prochaine couleur de cube
+      if (transmit.length()>1) { // récupération du nombre de tir réaliser
+        char num_tir_temp = transmit.charAt(2);
+        int num_tir = String(num_tir_temp).toInt();
+        coup_restant = 4 - level - num_tir;
+        nbEssai();
+      }
     }
     else {
       bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
@@ -303,6 +283,7 @@ void loop() {
         }
       }
       if (isInt) {
+        Serial.println("nouveau score");
         ajout_score = transmit;
       }
     }
@@ -314,11 +295,11 @@ void loop() {
 
     if (transmit=='q' && level>0) {
       level--;
-      choix_difficulte();
+      choixDifficulte();
     }
     else if (transmit=='d' && level<2) {
       level++;
-      choix_difficulte();
+      choixDifficulte();
     }
     else if (transmit == ' ') {
       jeu_demarrer = true;
@@ -327,7 +308,7 @@ void loop() {
       String nb = String(coup_restant);
       matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1); 
       // initialisation de la file de couleur de cube
-      creer_file();
+      creerFile();
     }
   }
 }

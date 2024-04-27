@@ -114,7 +114,7 @@ void transmettre_score() {  //envoyer le score obtenu a l'autre matrice
     //transmission du "score"
     //String aux=String(score);
     Serial.println(score);
-    Serial2.println(score);
+    Serial2.print(score);
 
     nb_eclates = 0;
     score = 0;
@@ -1020,7 +1020,6 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
     //int tb=numero_tir;
     //String tc=ta+tb;
     Serial2.print(-numero_tir);
-    Serial.print(-numero_tir);
     if (numero_tir == nb_tirs) {
       numero_tir = 0;
       Serial.print("mangue");
