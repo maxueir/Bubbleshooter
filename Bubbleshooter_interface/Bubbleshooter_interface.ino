@@ -274,6 +274,10 @@ void loop() {
         nbEssai();
       }
     }
+    else if (transmit == " ") {
+      jeu_demarrer = false;
+      coup_restant = 4 - level;
+    }
     else {
       bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
       for (int i = 0; i < transmit.length(); i++) {
