@@ -552,7 +552,7 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
 }
 
 void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
-  Serial.println("LE NUL IL A PERDU");
+  //Serial.println("LE NUL IL A PERDU");
   //a completer
 }
 
