@@ -588,6 +588,7 @@ void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 }
 
 void debut_bubble(){
+  clignote=0;
   matrix.fillRect(0, 0, 63, 63, couleurs[0]);
   matrix.fillScreen(matrix.Color333(0, 0, 0));
   // ecriture de "press space to play"
