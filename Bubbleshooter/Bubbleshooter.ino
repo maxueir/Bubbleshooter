@@ -1016,6 +1016,11 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
     //}
   } else {
     numero_tir++;
+    //String ta="t";
+    //int tb=numero_tir;
+    //String tc=ta+tb;
+    Serial2.print(-numero_tir);
+    Serial.print(-numero_tir);
     if (numero_tir == nb_tirs) {
       numero_tir = 0;
       Serial.print("mangue");
@@ -1269,17 +1274,18 @@ void deplacer(int dirdem, int incldem) {  //deplacer la fleche d'envoi en inclin
 
 void loop() {
   if (Serial2.available() > 0) {
+    //String a=(Serial2.readString());
     char a=(Serial2.read());
-    Serial.println("a");
+    Serial.print("reception: ");
     Serial.println(a);
-    Serial.println(a-48);
+    //Serial.println(a-48);
 
     if(prochaine_couleur==50){
-      prochaine_couleur = a-48;
+      //prochaine_couleur = a-48;
     }
     else{
       prochaine_couleur = prochaine_couleur2;
-      prochaine_couleur2 = a-48;
+      //prochaine_couleur2 = a-48;
     }
     //Serial.println(prochaine_couleur);
     //Serial.println(prochaine_couleur2);
