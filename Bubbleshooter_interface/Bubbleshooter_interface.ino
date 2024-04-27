@@ -33,6 +33,7 @@ String score = "0";  // score
 String score_temp = "0"; // score temporaire servant à la gestion de l'affichage du score
 String ajout_score = "0"; // nombre de point gagné par le joueur
 String ajout_score_temp = "0"; // nombre de point gagné par le joueur, temporaire servant à la gestion de l'affichage du score
+String best_score = "0";
 
 void setup() {
   randomSeed(analogRead(0));
@@ -124,76 +125,35 @@ void initInterface() {
   matrix.drawChar(x_letter + (7 * 4), y_letter, 'l', matrix.Color333(255, 0, 0), 0, 1);
   // affichage du niveau de difficulté sélectionné
   choixDifficulte();
-  // affichage du score
-  matrix.drawChar(matrix.width() - 7, (matrix.height() / 2) + 4, '0', matrix.Color333(255, 0, 0), 0, 1);
   majScore();
   
   
 }
 
 void majScore() {
-  /* convertir int en string en optimisant la mémoire
-  int num = 12;
-  char buf[10]; // Buffer pour la chaîne de caractères
-  sprintf(buf, "%d", num); // Convertit l'entier en chaîne de caractères
-  Serial.println(buf); // Affiche "12"
-  */
   // effacement du rectangle contenant l'affichage du score
   if (ajout_score.toInt()>0) {
-    score_temp = String(score.toInt() + 10);
     ajout_score_temp = String(ajout_score.toInt() - 10);
-    /*Serial.print("score = ");
-    Serial.println(score);
-    Serial.print("score_temp = ");
-    Serial.println(score_temp);
-    Serial.print("ajout_score = ");
-    Serial.println(ajout_score);
-    Serial.print("ajout_score_temp = ");
-    Serial.println(ajout_score_temp);*/
-    int j = 0;
-    bool cond = false;
-    if (ajout_score.length()!=ajout_score_temp.length()) {
-      matrix.drawChar(matrix.width() - (7*ajout_score.length()), (matrix.height() / 2) - 6, ajout_score[0], matrix.Color333(0, 0, 0), 0, 1);
-      cond = true;
+    score_temp = String(score.toInt() + 10);
+    for (int i = 0; i < score.length(); i++) {
+      matrix.drawChar(matrix.width() - (7*(i+1)), 22, score[score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
     }
-    for (int i = 0; i < ajout_score_temp.length(); i++) {
-      /*Serial.print("i = ");
-      Serial.println(i);
-      Serial.print("ajout_score = ");
-      Serial.println(ajout_score[i]);
-      Serial.print("ajout_score_temp = ");
-      Serial.println(ajout_score_temp[i]);*/
-      if (cond) {
-        if (ajout_score[i+1] != ajout_score_temp[i]) {
-          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
-          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score_temp[ajout_score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
-        }
-      } 
-      else {
-        if (ajout_score[i] != ajout_score_temp[i]) {
-          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score[ajout_score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
-          matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) - 6, ajout_score_temp[ajout_score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
-        }
-      }
-      j++;
-    }
-    // signe "plus"
-    matrix.drawChar(matrix.width() - (7*(j+2)), (matrix.height() / 2) -6, '+', matrix.Color333(0, 0, 0), 0, 1);
-    matrix.drawChar(matrix.width() - (7*(j+1)), (matrix.height() / 2) -6, '+', matrix.Color333(255, 0, 0), 0, 1);
     for (int i = 0; i < score_temp.length(); i++) {
-      /*Serial.print("i = ");
-      Serial.println(i);
-      Serial.print("score = ");
-      Serial.println(score[i]);
-      Serial.print("score_temp = ");
-      Serial.println(score_temp[i]);*/
-      if (score[i] != score_temp[i]) {
-        matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) + 4, score[score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
-        matrix.drawChar(matrix.width() - (7*(i+1)), (matrix.height() / 2) + 4, score_temp[score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
-      }
+      matrix.drawChar(matrix.width() - (7*(i+1)), 22, score_temp[score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
     }
     score = score_temp;
     ajout_score = ajout_score_temp;
+    // verification si le meilleur score du joueur doit etre mis a jour 
+    if (score.toInt()>=best_score.toInt()) {
+      best_score = score;
+      for (int i = 0; i < score.length(); i++) {
+        matrix.drawChar(matrix.width() - (7*(i+1)), 40, score[score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
+      }
+      for (int i = 0; i < best_score.length(); i++) {
+        matrix.drawChar(matrix.width() - (7*(i+1)), 40, score_temp[score_temp.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
+      }
+
+    }
   }
 }
 
@@ -229,6 +189,7 @@ void nbEssai() {
 }
 
 void dernierEssai() {
+  Serial.println(essai_visible);
   if (coup_restant == 1 && essai_visible) {
     matrix.drawChar(3, 25, '1', matrix.Color333(255, 0, 0), 0, 1);
     essai_visible = !essai_visible;
@@ -299,6 +260,8 @@ void loop() {
     else if (transmit == " ") {
       jeu_demarrer = false;
       coup_restant = 4 - level;
+      score="0";
+      matrix.fillRect(4, 55, 57, 59, matrix.Color333(0, 0, 0));
     }
     else {
       bool isInt = true; // Supposons que c'est un entier jusqu'à preuve du contraire
@@ -331,7 +294,24 @@ void loop() {
       coup_restant = 4 - level;
       // affichage du nombre de coup restant en fonction de la difficulté choisit
       String nb = String(coup_restant);
-      matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1); 
+      String scor = "Score";
+      for (int i = 0; i<scor.length(); i++) {
+        matrix.drawChar(13 + (6*i), 13, scor[i], matrix.Color333(255, 0, 0), 0, 1);
+      }
+      matrix.drawPixel(45,15,matrix.Color333(255, 0, 0));
+      matrix.drawPixel(45,19,matrix.Color333(255, 0, 0));
+      String best = "Best";
+      for (int i = 0; i<best.length(); i++) {
+        matrix.drawChar(13 + (6*i), 32, best[i], matrix.Color333(255, 0, 0), 0, 1);
+      }
+      matrix.drawPixel(39,34,matrix.Color333(255, 0, 0));
+      matrix.drawPixel(39,38,matrix.Color333(255, 0, 0));
+      if (score == "0") {
+        matrix.drawChar(matrix.width() - 7, 22, score[0], matrix.Color333(255, 0, 0), 0, 1);
+      }
+      if (best_score == "0") {
+        matrix.drawChar(matrix.width() - 7, 40, best_score[0], matrix.Color333(255, 0, 0), 0, 1);
+      }
       // initialisation de la file de couleur de cube
       creerFile();
     }
