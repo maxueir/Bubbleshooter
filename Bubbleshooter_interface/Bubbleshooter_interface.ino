@@ -171,6 +171,7 @@ void choixDifficulte() {
 }
 
 void nbEssai() {
+  /*
   String nb = String(coup_restant);
   if (jeu_demarrer && coup_restant>1) {
     matrix.drawChar(3, 25, nb[0], matrix.Color333(0, 0, 0), 0, 1);
@@ -185,6 +186,42 @@ void nbEssai() {
     coup_restant = 4 - level;
     nb = String(coup_restant);
     matrix.drawChar(3, 25, nb[0], matrix.Color333(255, 0, 0), 0, 1);
+  }*/
+  if(level==0){
+    if(coup_restant==4){
+  for(int i=0;i<4;i++){
+    matrix.fillRect(3, 13+7*i, 4, 4, matrix.Color333(255, 255, 255));
+  }}
+  else if(coup_restant==3){
+    matrix.fillRect(3, 13, 4, 4, matrix.Color333(0, 0, 0));
+  }
+  else if(coup_restant==2){
+    matrix.fillRect(3, 20, 4, 4, matrix.Color333(0, 0, 0));
+  }
+  else{
+    matrix.fillRect(3, 27, 4, 4, matrix.Color333(0, 0, 0));
+  }
+  }
+  else if(level==1){
+  if(coup_restant==3){
+  for(int i=0;i<3;i++){
+    matrix.fillRect(3, 16+7*i, 4, 4, matrix.Color333(255, 255, 255));
+  }}
+  else if(coup_restant==2){
+    matrix.fillRect(3, 16, 4, 4, matrix.Color333(0, 0, 0));
+  }
+  else{
+    matrix.fillRect(3, 23, 4, 4, matrix.Color333(0, 0, 0));
+  }
+  }
+  else{
+  if(coup_restant==2){
+  for(int i=0;i<2;i++){
+    matrix.fillRect(3, 20+7*i, 4, 4, matrix.Color333(255, 255, 255));
+  }}
+  else{
+    matrix.fillRect(3, 20, 4, 4, matrix.Color333(0, 0, 0));
+  }
   }
 }
 
@@ -314,6 +351,25 @@ void loop() {
       }
       // initialisation de la file de couleur de cube
       creerFile();
+
+      if(level==0){
+
+  
+  matrix.fillRect(2, 12, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 19, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 26, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 33, 5, 5, matrix.Color333(255, 255, 255));
+  }
+  else if(level==1){
+  matrix.fillRect(2, 15, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 22, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 29, 5, 5, matrix.Color333(255, 255, 255));
+  }
+  else{
+  
+  matrix.fillRect(2, 19, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 26, 5, 5, matrix.Color333(255, 255, 255));
+  }
     }
   }
 }

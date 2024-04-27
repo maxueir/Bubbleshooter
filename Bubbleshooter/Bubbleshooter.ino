@@ -552,7 +552,7 @@ void descendre() {    //fonction pour faire descendre le jeu et créer une nvlle
 }
 
 void perdu() {  //appellée lorsque une bille est trop basse ( -> partie perdue)
-  Serial.println("LE NUL IL A PERDU");
+  //Serial.println("LE NUL IL A PERDU");
   //a completer
 }
 
@@ -588,6 +588,7 @@ void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 }
 
 void debut_bubble(){
+  clignote=0;
   matrix.fillRect(0, 0, 63, 63, couleurs[0]);
   matrix.fillScreen(matrix.Color333(0, 0, 0));
   // ecriture de "press space to play"
@@ -1400,9 +1401,9 @@ void loop() {
       }
     } 
     else {
-      if (command == ' ') {
+      /*if (command == ' ') {
         debut_bubble();
-      } else if (command == 'e') {
+      } else */if (command == 'e') {
         deplacer(0, 1);
       } else if (command == 'e') {
         deplacer(0, 1);
