@@ -1400,9 +1400,9 @@ void loop() {
       }
     } 
     else {
-      if (command == ' ') {
+      /*if (command == ' ') {
         debut_bubble();
-      } else if (command == 'e') {
+      } else */if (command == 'e') {
         deplacer(0, 1);
       } else if (command == 'e') {
         deplacer(0, 1);
