@@ -45,6 +45,8 @@ volatile uint8_t clignote = 0;  //0=> eteint 1=> allume
 volatile int score = 0;  // score
 volatile uint8_t nb_eclates = 0;
 
+
+
 volatile uint8_t pos_cube_x = 0;    //position de la boule en bas a gauche en x
 volatile uint8_t pos_cube_y = 0;    //position de la boule en bas a gauche en y
 volatile int incl_cube = 0;         //inclinaison de la fleche d'envoi (-1=gauche 0=droit 1=droite)
@@ -72,6 +74,7 @@ volatile bool deplacement = false;  //booleen pour indiquer si la boule est en d
 volatile bool pret = true;          //booleen pour indiquer si la boule est prete a etre deplacee
 volatile bool en_jeu = false;//indique si un jeu est en cours
 volatile bool reception=false;//indique si on a recu la prochaine bille
+volatile bool fct_debut_bubble=true;//indique si on est dans la fonction debut bubble
 
 struct PaireInt {
   int fst;  //premier du couple, coordonnée en x
@@ -586,6 +589,7 @@ void afficher_jeu() {  //3, fill, 1de marge en x 0 en y
 
 void debut_bubble(){
   matrix.fillRect(0, 0, 63, 63, couleurs[0]);
+  matrix.fillScreen(matrix.Color333(0, 0, 0));
   // ecriture de "press space to play"
   int x_letter=15;
   int y_letter=15;
@@ -624,15 +628,30 @@ void initialisation_jeu() {
   }
   taille = 0;
   en_jeu = true;
+  taille2=0;
   pret = true;
   clignote=0;
   couleur_cube=random(1,nb_couleur);
+  reception=false;
+  numero_tir = 0;
+  pos = 30;  //position de la fleche d'envoi en x
+  incl = 0; 
+  ligne=0;
+  colonne=0;
+  score=0;
+  nb_eclates=0;
+  prochaine_couleur=50;
+  prochaine_couleur2=50;
   matrix.drawPixel(0, 52, matrix.Color888(255, 0, 0));
   matrix.drawLine(63, 52, 62, 52, matrix.Color888(255, 0, 0));
   deplacer(1, 0);                //permet d'afficher le canon
-  for (int i = 0; i < 9; i++) {  //9
+  for (int i = 0; i < 17; i++) {  
     for (int j = 0; j < 15; j++) {
-      jeu[i][j] = random(1, nb_couleur);
+      if(i<9){
+      jeu[i][j] = random(1, nb_couleur);}
+      else{
+         jeu[i][j] = 0;
+      }
     }
   }
   //jeu[14][13]=2;
@@ -1297,7 +1316,7 @@ void rearmer(){//permet de rearmer le canon
         couleur_cube=prochaine_couleur;
         Serial.print("chargement de :");
         Serial.print(prochaine_couleur);
-        reception=false;
+        //reception=false;
         if(couleur_cube==50){
           couleur_cube=random(1,nb_couleur);
         }
@@ -1368,8 +1387,16 @@ void loop() {
           difficulte++;
         }
       } else if (command == ' ') {
+        if(fct_debut_bubble){
         initialisation_jeu();
         Serial2.print(' ');
+        fct_debut_bubble=false;
+        }
+        else{
+        debut_bubble();
+        Serial2.print(' ');
+        fct_debut_bubble=true;
+        }
       }
     } 
     else {
@@ -1383,6 +1410,7 @@ void loop() {
         deplacer(1, 0);
       } else if (command == 'z' && pret && !deplacement && reception) {
         Serial2.print('z');
+        reception=false;
         pret = false;
         deplacement = true;
         incl_cube = incl;
