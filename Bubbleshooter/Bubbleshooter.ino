@@ -114,7 +114,7 @@ void transmettre_score() {  //envoyer le score obtenu a l'autre matrice
     //transmission du "score"
     //String aux=String(score);
     Serial.println(score);
-    Serial2.print(score);
+    Serial2.println(score);
 
     nb_eclates = 0;
     score = 0;
@@ -700,7 +700,6 @@ bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloqu
 
       if (pos_cube_y % 3 == 0 && ligne % 2 == 0) {
         colonne = 14;
-
         return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne - 1] % 32 == 0);  //les deux du dessus
       } else if (pos_cube_y % 3 == 0 && ligne % 2 == 1) {
         colonne = 14;
@@ -710,7 +709,9 @@ bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloqu
       } else if (ligne % 2 == 0 && pos_cube_y % 3 == 2) {
         colonne = 14;
         ligne--;
-        return false;
+        //Serial.print(3);
+        //int a=0;
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne][colonne-1] % 32 == 0);
       } else {
         return true;
       }
@@ -774,22 +775,22 @@ bool case_libre() {  //indique si le cube peut avancer ou s'il vient de se bloqu
   } else if (incl_cube == -1) {
 
 
-    if (pos_cube_x == 58) {
+    if (pos_cube_x == 2) {
       ligne = (pos_cube_y - 1) / 3;
 
-      if (pos_cube_y % 3 == 0 && ligne % 2 == 0) {
-        colonne = 14;
+      if (pos_cube_y % 3 == 0 && ligne % 2 == 1) {
+        colonne = 0;
 
-        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne - 1] % 32 == 0);  //les deux du dessus
-      } else if (pos_cube_y % 3 == 0 && ligne % 2 == 1) {
-        colonne = 14;
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0 && jeu[ligne - 1][colonne + 1] % 32 == 0);  //les deux du dessus
+      } else if (pos_cube_y % 3 == 0 && ligne % 2 == 0) {
+        colonne = 0;
 
         return ((pos_cube_y > 2 + en_tete) && jeu[ligne - 1][colonne] % 32 == 0);  //celle du dessus
 
-      } else if (ligne % 2 == 0 && pos_cube_y % 3 == 2) {
-        colonne = 14;
+      } else if (ligne % 2 == 1 && pos_cube_y % 3 == 2) {
+        colonne = 0;
         ligne--;
-        return false;
+        return ((pos_cube_y > 2 + en_tete) && jeu[ligne][colonne+1] % 32 == 0);
       } else {
         return true;
       }
@@ -1022,6 +1023,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
       descendre();
 
     } else {
+      transmettre_score();
       pret = true;
       Serial.println("FOU");
       couleur_cube = random(1, nb_couleur);  //re-armer le canon
@@ -1050,7 +1052,7 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
 void deplacer_cube() {
   if (en_jeu) {
 
-    //Serial.println(deplacement);
+    //Serial.println(case_libre());
     if (deplacement && case_libre()) {
       for (int i = 0; i < 2; i++) {
 
@@ -1279,11 +1281,11 @@ void loop() {
       prochaine_couleur = prochaine_couleur2;
       prochaine_couleur2 = a-48;
     }
-    Serial.println(prochaine_couleur);
-    Serial.println(prochaine_couleur2);
+    //Serial.println(prochaine_couleur);
+    //Serial.println(prochaine_couleur2);
 
-    Serial.println("prochaine_couleur");
-    Serial.println(prochaine_couleur);
+    //Serial.println("prochaine_couleur");
+    //Serial.println(prochaine_couleur);
     }
   if (Serial.available() > 0) {
 
