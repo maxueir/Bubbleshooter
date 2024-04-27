@@ -225,6 +225,15 @@ void dernierEssai() {
     essai_visible = !essai_visible;
   }
 
+  if (essai_visible) {
+    matrix.fillRect(35 , matrix.height() - 7, 3, 3, couleurs[file_couleurs[0]]);
+    essai_visible = !essai_visible;
+  }
+  else {
+    matrix.fillRect(35 , matrix.height() - 7, 3, 3, couleurs[0]);
+    essai_visible = !essai_visible;
+  }
+
 }
 
 void creerFile(){
