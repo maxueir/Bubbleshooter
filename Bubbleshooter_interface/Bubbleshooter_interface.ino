@@ -124,9 +124,17 @@ void initInterface() { // interface pendant le choix de la difficulté par le jo
   matrix.drawChar(x_letter + (7 * 4), y_letter, 'l', matrix.Color333(255, 0, 0), 0, 1);
   // affichage du niveau de difficulté sélectionné
   choixDifficulte();
-  majScore();
-  
-  
+  majScore(); 
+}
+
+void reinitialisationScore() { // remet le score à 0 et refait sont affichage
+  for (int i = 0; i < score.length(); i++) {
+    matrix.drawChar(matrix.width() - (7*(i+1)), 22, score[score.length()-i-1], matrix.Color333(0, 0, 0), 0, 1);
+  }
+  score = "0";
+  for (int i = 0; i < score.length(); i++) {
+    matrix.drawChar(matrix.width() - (7*(i+1)), 22, score[score.length()-i-1], matrix.Color333(255, 0, 0), 0, 1);
+  }
 }
 
 void majScore() { // met à jour le score en temps réel
@@ -317,7 +325,6 @@ void loop() {
     else if (transmit == " ") {
       jeu_demarrer = false;
       coup_restant = 4 - level;
-      score="0";
       // effacer le rectangle du nombre de coup restant
       matrix.fillRect(2, 13, 7, 38, matrix.Color333(0, 0, 0));
       // effacer le rectangle de la file de bille
@@ -365,9 +372,7 @@ void loop() {
       }
       matrix.drawPixel(39,34,matrix.Color333(255, 0, 0));
       matrix.drawPixel(39,38,matrix.Color333(255, 0, 0));
-      if (score == "0") {
-        matrix.drawChar(matrix.width() - 7, 22, score[0], matrix.Color333(255, 0, 0), 0, 1);
-      }
+      reinitialisationScore();
       if (best_score == "0") {
         matrix.drawChar(matrix.width() - 7, 40, best_score[0], matrix.Color333(255, 0, 0), 0, 1);
       }
