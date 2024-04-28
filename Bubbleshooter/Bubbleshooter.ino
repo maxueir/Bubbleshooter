@@ -967,8 +967,8 @@ void loop() {
       }
     } 
     else {
-      if (command == 'e') {
-        deplacer(0, 1);
+      if (command == 'a') {
+        deplacer(0, -1);
       } else if (command == 'e') {
         deplacer(0, 1);
       } else if (command == 'q') {
