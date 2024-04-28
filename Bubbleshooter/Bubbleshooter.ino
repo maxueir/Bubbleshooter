@@ -233,68 +233,6 @@ bool get(uint8_t x, uint8_t y) {
   return jeu[y][x] >= 32;
 }
 
-void init_anim() {
-  static int x_letter = (matrix.width() / 2) - 3;
-  static int y_letter = (matrix.height() / 2) - 3;
-
-  static int x;
-  static int y;
-  static int dx;
-  static int dy;
-
-  for (int i = 0; i < 2; i++) {    // répète la boucle d'animation, 2 fois
-    for (int k = 0; k < 3; k++) {  // les leds de la matrice s'allument toutes, 3 fois
-      matrix.fillRect(0, 0, matrix.width() - 1, matrix.height() - 1, matrix.Color888(255, 0, 0));
-      delay(50);
-      matrix.fillScreen(matrix.Color888(0, 0, 0));  // Efface l'écran
-    }
-
-    for (int j = 0; j < 2; j++) {  // allume les leds en faisant le contour de la matrice, 2 fois
-      x = 1;
-      y = 0;
-      dx = 1;
-      dy = 0;
-      matrix.drawChar(x_letter - (7 * 3), (matrix.height() / 2) - 8, 'B', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - (7 * 2), (matrix.height() / 2) - 8, 'u', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - 7, (matrix.height() / 2) - 8, 'b', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter, (matrix.height() / 2) - 8, 'b', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + 7, (matrix.height() / 2) - 8, 'l', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + (7 * 2), (matrix.height() / 2) - 8, 'e', matrix.Color888(255, 0, 0), 0, 1);
-
-      matrix.drawChar(x_letter - (7 * 3), (matrix.height() / 2), 'S', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - (7 * 2), (matrix.height() / 2), 'h', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter - 7, (matrix.height() / 2), 'o', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter, (matrix.height() / 2), 'o', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + 7, (matrix.height() / 2), 't', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + (7 * 2), (matrix.height() / 2), 'e', matrix.Color888(255, 0, 0), 0, 1);
-      matrix.drawChar(x_letter + (7 * 3), (matrix.height() / 2), 'r', matrix.Color888(255, 0, 0), 0, 1);
-
-      while (x != 0 || y != 0) {                           // animation pixel tournant
-        matrix.drawPixel(x, y, matrix.Color333(7, 7, 7));  // Allumer les pixels en blanc
-        x += dx;                                           // Mettre à jour les positions
-        y += dy;
-        if (x == 0 && y == 0) {  // Vérifier si la ligne a atteint un bord et changer de direction si nécessaire
-          dx = 1;
-          dy = 0;
-        } else if (x == matrix.width() - 1 && y == 0) {
-          dx = 0;
-          dy = 1;
-        } else if (x == matrix.width() - 1 && y == matrix.height() - 1) {
-          dx = -1;
-          dy = 0;
-        } else if (x == 0 && y == matrix.height() - 1) {
-          dx = 0;
-          dy = -1;
-        }
-        delay(3);  // Contrôle de la vitesse de l'animation
-      }
-      matrix.fillScreen(matrix.Color888(0, 0, 0));
-    }
-  }
-  initialisation_jeu();
-}
-
-
 void boules_isolees() {  //peut etre reduit a un pb de graphe -> chaque bille est reliee a ses 6 voisins au max et il s'agit de voir si il existe un chemin entre chaque bille et la ligne -1 (a chercher dans cours de graphe et voir pour la complexite)
 
 
