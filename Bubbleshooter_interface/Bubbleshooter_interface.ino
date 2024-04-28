@@ -20,8 +20,7 @@ DFRobot_RGBMatrix matrix(A, B, C, D, E, CLK, LAT, OE, false, WIDTH, _HIGH);
 uint8_t nb_couleur = 7;       //affiche nb_couleur - 1 dans le jeu
 volatile uint8_t file_couleurs[5];
 
-color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
-
+color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 50, 0), matrix.Color888(0, 135, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) }; 
 
 volatile int level = 1;
 volatile int coup_restant;
@@ -130,7 +129,7 @@ void initInterface() { // interface pendant le choix de la difficulté par le jo
   
 }
 
-void majScore() { // met à jour la score en temps réel
+void majScore() { // met à jour le score en temps réel
   // effacement du rectangle contenant l'affichage du score
   if (ajout_score.toInt()>0) {
     ajout_score_temp = String(ajout_score.toInt() - 10);
@@ -170,7 +169,7 @@ void choixDifficulte() { // modifie la difficulté de la partie (variable "level
   }
 }
 
-void nbEssai() { // met à jour la nombre d'essai restant pour joueur
+void nbEssai() { // met à jour le nombre d'essai restant pour joueur
   if(level==0){
     if(coup_restant==4){
   for(int i=0;i<4;i++){
@@ -283,7 +282,7 @@ void creerFile(){ // créer une nouvelle file de couleur pour les billes
   Serial2.print(file_couleurs[0]); // envoi de la couleur de la 1ere bille
 }
 
-int pop(){ // renvoi le numéro de la couleur de la bille prochaine qu'aura le joueur une fois son coup joué 
+int pop(){ // renvoi le numéro de la couleur de la prochaine bille qu'aura le joueur une fois son coup joué 
   int res=file_couleurs[1];
   for(int i=0;i<5;i++){
     if(i==4){

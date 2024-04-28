@@ -67,14 +67,12 @@ volatile uint8_t fin_x[15];          //x de la bille a clignoter
 volatile uint8_t jeu[17][15];  //que des 0 partout par defaut, donc aucune bille
 //volatile bool visite[17][15];//18 où la 18eme => partie perdue
 
-color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 125, 0), matrix.Color888(0, 255, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) };
-
+color couleurs[7] = { matrix.Color888(0, 0, 0), matrix.Color888(255, 0, 255), matrix.Color888(0, 0, 255), matrix.Color888(255, 50, 0), matrix.Color888(0, 135, 0), matrix.Color888(255, 255, 0), matrix.Color888(0, 255, 255) }; 
 volatile bool deplacement = false;  //booleen pour indiquer si la boule est en deplacement
 volatile bool pret = true;          //booleen pour indiquer si la boule est prete a etre deplacee
 volatile bool en_jeu = false;//indique si un jeu est en cours
 volatile bool reception=false;//indique si on a recu la prochaine bille
 volatile bool fct_debut_bubble=true;//indique si on est dans la fonction debut bubble
-
 
 void setup() {
   randomSeed(analogRead(0));
