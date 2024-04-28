@@ -193,48 +193,50 @@ void nbEssai() {
     matrix.fillRect(3, 13+7*i, 4, 4, matrix.Color333(255, 255, 255));
   }}
   else if(coup_restant==3){
-    matrix.fillRect(3, 13, 4, 4, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 13, 3, 3, matrix.Color333(0, 0, 0));
   }
   else if(coup_restant==2){
-    matrix.fillRect(3, 20, 4, 4, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 20, 3, 3, matrix.Color333(0, 0, 0));
   }
   else{
-    matrix.fillRect(3, 27, 4, 4, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 27, 3, 3, matrix.Color333(0, 0, 0));
   }
   }
   else if(level==1){
-    if(coup_restant==3){
-    for(int i=0;i<3;i++){
-      matrix.fillRect(3, 16+7*i, 4, 4, matrix.Color333(255, 255, 255));
-    }}
-    else if(coup_restant==2){
-      matrix.fillRect(3, 16, 4, 4, matrix.Color333(0, 0, 0));
-    }
-    else{
-      matrix.fillRect(3, 23, 4, 4, matrix.Color333(0, 0, 0));
-    }
+  if(coup_restant==3){
+    Serial.print("ixi");
+  for(int i=0;i<3;i++){
+    
+    matrix.fillRect(3, 16+7*i, 4, 4, matrix.Color333(255, 255, 255));
+  }}
+  else if(coup_restant==2){
+    matrix.fillRect(3, 16, 3, 3, matrix.Color333(0, 0, 0));
   }
   else{
-    if(coup_restant==2){
-    for(int i=0;i<2;i++){
-      matrix.fillRect(3, 20+7*i, 4, 4, matrix.Color333(255, 255, 255));
-    }}
-    else{
-      matrix.fillRect(3, 20, 4, 4, matrix.Color333(0, 0, 0));
-    }
+    matrix.fillRect(3, 23, 3, 3, matrix.Color333(0, 0, 0));
+  }
+  }
+  else{
+  if(coup_restant==2){
+  for(int i=0;i<2;i++){
+    matrix.fillRect(3, 20+7*i, 4, 4, matrix.Color333(255, 255, 255));
+  }}
+  else{
+    matrix.fillRect(3, 20, 3, 3, matrix.Color333(0, 0, 0));
+  }
   }
 }
 
 void dernierEssai() {
   Serial.println(essai_visible);
-  if (coup_restant == 1 && essai_visible) {
+  /*if (coup_restant == 1 && essai_visible) {
     matrix.drawChar(3, 25, '1', matrix.Color333(255, 0, 0), 0, 1);
     essai_visible = !essai_visible;
   }
   else if (coup_restant == 1 && !essai_visible) {
     matrix.drawChar(3, 25, '1', matrix.Color333(0, 0, 0), 0, 1);
     essai_visible = !essai_visible;
-  }
+  }*/
 
   if (essai_visible) {
     matrix.fillRect(35 , matrix.height() - 7, 3, 3, couleurs[file_couleurs[0]]);
