@@ -1052,14 +1052,16 @@ void exploser(int lig, int col, int coul) {  //methode pour supprimer les boules
     //String ta="t";
     //int tb=numero_tir;
     //String tc=ta+tb;
-    Serial2.print(-numero_tir);
+    
     if (numero_tir == nb_tirs) {
       numero_tir = 0;
+      Serial2.print(-numero_tir);
       Serial.print("mangue");
       pret = false;
       descendre();
 
     } else {
+      Serial2.print(-numero_tir);
       transmettre_score();
       pret = true;
       Serial.println("FOU");
