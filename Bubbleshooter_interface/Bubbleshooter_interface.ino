@@ -203,25 +203,25 @@ void nbEssai() {
   }
   }
   else if(level==1){
-  if(coup_restant==3){
-  for(int i=0;i<3;i++){
-    matrix.fillRect(3, 16+7*i, 4, 4, matrix.Color333(255, 255, 255));
-  }}
-  else if(coup_restant==2){
-    matrix.fillRect(3, 16, 4, 4, matrix.Color333(0, 0, 0));
+    if(coup_restant==3){
+    for(int i=0;i<3;i++){
+      matrix.fillRect(3, 16+7*i, 4, 4, matrix.Color333(255, 255, 255));
+    }}
+    else if(coup_restant==2){
+      matrix.fillRect(3, 16, 4, 4, matrix.Color333(0, 0, 0));
+    }
+    else{
+      matrix.fillRect(3, 23, 4, 4, matrix.Color333(0, 0, 0));
+    }
   }
   else{
-    matrix.fillRect(3, 23, 4, 4, matrix.Color333(0, 0, 0));
-  }
-  }
-  else{
-  if(coup_restant==2){
-  for(int i=0;i<2;i++){
-    matrix.fillRect(3, 20+7*i, 4, 4, matrix.Color333(255, 255, 255));
-  }}
-  else{
-    matrix.fillRect(3, 20, 4, 4, matrix.Color333(0, 0, 0));
-  }
+    if(coup_restant==2){
+    for(int i=0;i<2;i++){
+      matrix.fillRect(3, 20+7*i, 4, 4, matrix.Color333(255, 255, 255));
+    }}
+    else{
+      matrix.fillRect(3, 20, 4, 4, matrix.Color333(0, 0, 0));
+    }
   }
 }
 
