@@ -190,45 +190,61 @@ void nbEssai() {
   if(level==0){
     if(coup_restant==4){
   for(int i=0;i<4;i++){
-    matrix.fillRect(3, 13+7*i, 4, 4, matrix.Color333(255, 255, 255));
+    if(i==3){
+      matrix.fillRect(2, 13+10*i, 7, 7, matrix.Color333(255, 255, 255));
+    }
+    else{
+      matrix.fillRect(3, 14+10*i, 5, 5, matrix.Color333(255, 255, 255));
+    }
+    
   }}
   else if(coup_restant==3){
-    matrix.fillRect(3, 13, 3, 3, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 14, 5, 5, matrix.Color333(0, 0, 0));
   }
   else if(coup_restant==2){
-    matrix.fillRect(3, 20, 3, 3, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 24, 5, 5, matrix.Color333(0, 0, 0));
   }
   else{
-    matrix.fillRect(3, 27, 3, 3, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 34, 5, 5, matrix.Color333(0, 0, 0));
   }
   }
   else if(level==1){
   if(coup_restant==3){
-    Serial.print("ixi");
   for(int i=0;i<3;i++){
+    if(i==2){
+      matrix.fillRect(2, 18+10*i, 7, 7, matrix.Color333(255, 255, 255));
+    }
+    else{
+      matrix.fillRect(3, 19+10*i, 5, 5, matrix.Color333(255, 255, 255));
+    }
     
-    matrix.fillRect(3, 16+7*i, 4, 4, matrix.Color333(255, 255, 255));
   }}
   else if(coup_restant==2){
-    matrix.fillRect(3, 16, 3, 3, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 19, 5, 5, matrix.Color333(0, 0, 0));
   }
   else{
-    matrix.fillRect(3, 23, 3, 3, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 29, 5, 5, matrix.Color333(0, 0, 0));
   }
   }
   else{
   if(coup_restant==2){
   for(int i=0;i<2;i++){
-    matrix.fillRect(3, 20+7*i, 4, 4, matrix.Color333(255, 255, 255));
+    if(i==1){
+      matrix.fillRect(2, 23+10*i, 7, 7, matrix.Color333(255, 255, 255));
+    }
+    else{
+      matrix.fillRect(3, 24+10*i, 5, 5, matrix.Color333(255, 255, 255));
+    }
+    
   }}
   else{
-    matrix.fillRect(3, 20, 3, 3, matrix.Color333(0, 0, 0));
+    matrix.fillRect(3, 24, 5, 5, matrix.Color333(0, 0, 0));
   }
   }
 }
 
 void dernierEssai() {
-  Serial.println(essai_visible);
+  //Serial.println(essai_visible);
   /*if (coup_restant == 1 && essai_visible) {
     matrix.drawChar(3, 25, '1', matrix.Color333(255, 0, 0), 0, 1);
     essai_visible = !essai_visible;
@@ -237,14 +253,47 @@ void dernierEssai() {
     matrix.drawChar(3, 25, '1', matrix.Color333(0, 0, 0), 0, 1);
     essai_visible = !essai_visible;
   }*/
-
+  if(jeu_demarrer){
   if (essai_visible) {
     matrix.fillRect(35 , matrix.height() - 7, 3, 3, couleurs[file_couleurs[0]]);
-    essai_visible = !essai_visible;
+    
   }
   else {
     matrix.fillRect(35 , matrix.height() - 7, 3, 3, couleurs[0]);
-    essai_visible = !essai_visible;
+    
+  }
+
+  if(coup_restant==1){
+    if(level==0){
+      if(essai_visible){
+        matrix.fillRect(2, 43, 7, 7, matrix.Color333(255, 255, 255));
+      }
+      else{
+        matrix.fillRect(2, 43, 7, 7, matrix.Color333(0, 0, 0));
+      }
+    }
+    else if(level==1){
+      if(essai_visible){
+        matrix.fillRect(2, 38, 7, 7, matrix.Color333(255, 255, 255));
+      }
+      else{
+        matrix.fillRect(2, 38, 7, 7, matrix.Color333(0, 0, 0));
+      }
+    }
+    else{
+      if(essai_visible){
+        matrix.fillRect(2, 33, 7, 7, matrix.Color333(255, 255, 255));
+      }
+      else{
+        matrix.fillRect(2, 33, 7, 7, matrix.Color333(0, 0, 0));
+      }
+      
+    }
+
+
+  }
+  essai_visible = !essai_visible;
+
   }
 
 }
@@ -357,20 +406,20 @@ void loop() {
       if(level==0){
 
   
-  matrix.fillRect(2, 12, 5, 5, matrix.Color333(255, 255, 255));
-  matrix.fillRect(2, 19, 5, 5, matrix.Color333(255, 255, 255));
-  matrix.fillRect(2, 26, 5, 5, matrix.Color333(255, 255, 255));
-  matrix.fillRect(2, 33, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 13, 7, 7, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 23, 7, 7, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 33, 7, 7, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 43, 7, 7, matrix.Color333(255, 255, 255));
   }
   else if(level==1){
-  matrix.fillRect(2, 15, 5, 5, matrix.Color333(255, 255, 255));
-  matrix.fillRect(2, 22, 5, 5, matrix.Color333(255, 255, 255));
-  matrix.fillRect(2, 29, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 18, 7, 7, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 28, 7, 7, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 38, 7, 7, matrix.Color333(255, 255, 255));
   }
   else{
   
-  matrix.fillRect(2, 19, 5, 5, matrix.Color333(255, 255, 255));
-  matrix.fillRect(2, 26, 5, 5, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 23, 7, 7, matrix.Color333(255, 255, 255));
+  matrix.fillRect(2, 33, 7, 7, matrix.Color333(255, 255, 255));
   }
     }
   }
